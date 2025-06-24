@@ -1,8 +1,7 @@
 import React from "react";
-import { View, StyleSheet, Image, Platform } from "react-native";
+import { View, StyleSheet, Image, Platform, ScrollView } from "react-native";
 import { Colors } from "../styles/Colors";
-import { Text, Banner, BottomNavigation } from "react-native-paper";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Text, Banner, Card } from "react-native-paper";
 
 export default function HomeScreen() {
   const icons = {
@@ -11,9 +10,33 @@ export default function HomeScreen() {
     cards: require("../../assets/icons8-cards-50.png"),
   };
 
+  const projects = [
+    {
+      title: "Portfolio Website",
+      description: "Built with React and hosted on Firebase.",
+    },
+    {
+      title: "Expense Tracker",
+      description: "Upload Excel, analyze data, track budget.",
+    },
+    {
+      title: "AI Alert System",
+      description: "Sensor anomaly detection with Azure + Grafana.",
+    },
+  ];
+
+  const skills = [
+    "React Native",
+    "Firebase",
+    "MongoDB",
+    "Node.js",
+    "Python",
+    "Automation",
+  ];
+
   return (
-    <View style={styles.container}>
-      {/* Styled Banner */}
+    <ScrollView style={styles.container}>
+      {/* Banner */}
       <Banner visible={true} actions={[]} style={styles.banner}>
         <View style={styles.bannerContent}>
           <Image
@@ -32,7 +55,30 @@ export default function HomeScreen() {
           />
         </View>
       </Banner>
-    </View>
+
+      {/* My Work */}
+      <Text style={styles.sectionTitle}>My Work</Text>
+      {projects.map((project, index) => (
+        <Card key={index} style={styles.card}>
+          <Card.Title title={project.title} />
+          <Card.Content>
+            <Text>{project.description}</Text>
+          </Card.Content>
+        </Card>
+      ))}
+
+      {/* Skills */}
+      <Text style={styles.sectionTitle}>Skills</Text>
+      <View style={styles.skillContainer}>
+        {skills.map((skill, index) => (
+          <Card key={index} style={styles.skillCard}>
+            <Card.Content>
+              <Text style={{ textAlign: "center" }}>{skill}</Text>
+            </Card.Content>
+          </Card>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -43,12 +89,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.secondary,
   },
-
   banner: {
     backgroundColor: Colors.primary,
     paddingVertical: 20,
-    marginTop: -2, // or adjust to -8 or -10 if needed
-
+    marginTop: -2,
     marginBottom: 20,
   },
   bannerContent: {
@@ -78,5 +122,24 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     marginBottom: 0,
     textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginVertical: 10,
+    color: "#fff",
+  },
+  card: {
+    marginBottom: 12,
+  },
+  skillContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  skillCard: {
+    width: "30%",
+    marginBottom: 10,
+    alignItems: "center",
   },
 });
