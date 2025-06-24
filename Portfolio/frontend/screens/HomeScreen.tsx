@@ -38,13 +38,17 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     flex: 1,
     backgroundColor: Colors.secondary,
   },
+
   banner: {
     backgroundColor: Colors.primary,
     paddingVertical: 20,
+    marginTop: -2, // or adjust to -8 or -10 if needed
+
     marginBottom: 20,
   },
   bannerContent: {
