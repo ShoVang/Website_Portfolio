@@ -1,55 +1,37 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
-import {
-  Button,
-  Text,
-  Portal,
-  Modal,
-  RadioButton,
-  Card,
-} from "react-native-paper";
+import React from "react";
+import { View, StyleSheet, Image, Platform } from "react-native";
+import { Colors } from "../styles/Colors";
+import { Text, Banner, BottomNavigation } from "react-native-paper";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function HomeScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState("Apple");
-
-  const options = ["Apple", "Banana", "Cherry"];
+  const icons = {
+    dice: require("../../assets/icons8-dice-50.png"),
+    chip: require("../../assets/casino-chip.png"),
+    cards: require("../../assets/icons8-cards-50.png"),
+  };
 
   return (
     <View style={styles.container}>
-      <Button mode="contained" onPress={() => setModalVisible(true)}>
-        Open Modal
-      </Button>
-
-      <Portal>
-        <Modal
-          visible={modalVisible}
-          onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={styles.modalContainer}
-        >
-          <Text variant="titleMedium" style={styles.modalText}>
-            This is inside the modal!
-          </Text>
-        </Modal>
-      </Portal>
-
-      <Card style={styles.card}>
-        <Card.Title title="Choose a fruit" />
-        <Card.Content>
-          <RadioButton.Group
-            onValueChange={(value) => setSelectedItem(value)}
-            value={selectedItem}
-          >
-            {options.map((option) => (
-              <RadioButton.Item key={option} label={option} value={option} />
-            ))}
-          </RadioButton.Group>
-        </Card.Content>
-      </Card>
-
-      <Text variant="bodyLarge" style={styles.selectedText}>
-        Selected: {selectedItem}
-      </Text>
+      {/* Styled Banner */}
+      <Banner visible={true} actions={[]} style={styles.banner}>
+        <View style={styles.bannerContent}>
+          <Image
+            source={icons.chip}
+            style={[styles.iconImage, { marginRight: 12 }]}
+            resizeMode="contain"
+          />
+          <View style={styles.bannerTextContainer}>
+            <Text style={styles.neonText}>ROLL THE DICE</Text>
+            <Text style={styles.neonText}>HIRE ME</Text>
+          </View>
+          <Image
+            source={icons.dice}
+            style={[styles.iconImage, { marginLeft: 12 }]}
+            resizeMode="contain"
+          />
+        </View>
+      </Banner>
     </View>
   );
 }
@@ -58,23 +40,39 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     flex: 1,
+    backgroundColor: Colors.secondary,
+  },
+  banner: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 20,
+    marginBottom: 20,
+  },
+  bannerContent: {
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f5f5f5",
+    width: "100%",
   },
-  modalContainer: {
-    backgroundColor: "white",
-    padding: 20,
-    marginHorizontal: 20,
+  iconImage: {
+    width: 50,
+    height: 50,
     borderRadius: 8,
+    backgroundColor: "transparent",
   },
-  modalText: {
-    textAlign: "center",
+  bannerTextContainer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
-  card: {
-    marginTop: 30,
-  },
-  selectedText: {
-    marginTop: 20,
+  neonText: {
+    color: "#FFD700",
     fontWeight: "bold",
+    fontSize: 28,
+    textShadowColor: "#FFB300",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+    letterSpacing: 2,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    marginBottom: 0,
+    textAlign: "center",
   },
 });
