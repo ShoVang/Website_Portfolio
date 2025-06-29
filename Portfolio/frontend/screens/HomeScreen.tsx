@@ -8,7 +8,7 @@ import {
   Platform,
 } from "react-native";
 import { Colors } from "../styles/Colors";
-import { Text, Card, Modal, Portal, Button, Banner } from "react-native-paper";
+import { Text, Card, Modal, Portal, Button } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
 
 const icons = {
@@ -30,6 +30,19 @@ const originalProjects = [
     title: "AI Alert System",
     description: "Sensor anomaly detection with Azure + Grafana.",
   },
+  {
+    title: "CITS Ticket System",
+    description: "Ticket management system for IT company.",
+    //image: require("../../assets/cits-ticket-system.png"),
+  },
+  {
+    title: "Skillin",
+    description: "CDN for Skillin",
+  },
+  {
+    title: "Trading Bot",
+    description: " Three trading bot for personal use",
+  },
 ];
 
 export default function HomeScreen() {
@@ -38,6 +51,35 @@ export default function HomeScreen() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
+
+  const skills = [
+    "Automation",
+    "Website Building",
+    "App Development",
+    "Cloud Computing",
+    "Database Design",
+    "AI Integration",
+    "UI/UX Design",
+  ];
+  const [reel1, setReel1] = useState(skills[0]);
+  const [reel2, setReel2] = useState(skills[1]);
+  const [reel3, setReel3] = useState(skills[2]);
+  const [spinning, setSpinning] = useState(false);
+
+  const spinReels = () => {
+    setSpinning(true);
+    let count = 0;
+    const interval = setInterval(() => {
+      setReel1(skills[Math.floor(Math.random() * skills.length)]);
+      setReel2(skills[Math.floor(Math.random() * skills.length)]);
+      setReel3(skills[Math.floor(Math.random() * skills.length)]);
+      count++;
+      if (count > 15) {
+        clearInterval(interval);
+        setSpinning(false);
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     shuffleCards();
@@ -92,30 +134,47 @@ export default function HomeScreen() {
       </View>
 
       {/* Projects */}
-      <Text style={styles.sectionTitle}>My Projects</Text>
       <View style={styles.cardGrid}>
-        {shuffledProjects.map((project, index) => (
-          <Pressable key={index} onPress={() => handleCardPress(index)}>
-            <Animatable.View
-              animation="bounceIn"
-              delay={index * 100}
-              duration={600}
-              key={`${shuffleKey}-${index}`}
-              style={styles.flipCard}
-            >
-              {flippedCards[index] ? (
-                <Card style={styles.projectCard}>
-                  <Card.Content>
-                    <Text style={styles.projectTitle}>{project.title}</Text>
-                  </Card.Content>
-                </Card>
-              ) : (
-                <View style={styles.cardBack}>
-                  <Image source={icons.back} style={styles.cardBackImage} />
-                </View>
-              )}
-            </Animatable.View>
-          </Pressable>
+        {[0, 1].map((row) => (
+          <View style={styles.cardRow} key={row}>
+            {shuffledProjects
+              .slice(row * 3, row * 3 + 3)
+              .map((project, index) => {
+                const globalIndex = row * 3 + index;
+                return (
+                  <Pressable
+                    key={globalIndex}
+                    onPress={() => handleCardPress(globalIndex)}
+                    style={styles.cardWrapper}
+                  >
+                    <Animatable.View
+                      animation="bounceIn"
+                      delay={globalIndex * 100}
+                      duration={600}
+                      key={`${shuffleKey}-${globalIndex}`}
+                      style={styles.flipCard}
+                    >
+                      {flippedCards[globalIndex] ? (
+                        <Card style={styles.projectCard}>
+                          <Card.Content>
+                            <Text style={styles.projectTitle}>
+                              {project.title}
+                            </Text>
+                          </Card.Content>
+                        </Card>
+                      ) : (
+                        <View style={styles.cardBack}>
+                          <Image
+                            source={icons.back}
+                            style={styles.cardBackImage}
+                          />
+                        </View>
+                      )}
+                    </Animatable.View>
+                  </Pressable>
+                );
+              })}
+          </View>
         ))}
       </View>
 
@@ -124,10 +183,37 @@ export default function HomeScreen() {
         buttonColor={Colors.yellow}
         textColor={Colors.black}
         onPress={shuffleCards}
-        style={{ marginTop: 10, alignSelf: "center" }}
+        style={{ marginTop: 30, alignSelf: "center" }}
       >
         Shuffle Cards
       </Button>
+
+      {/* Skills Slot Machine */}
+      <View style={styles.slotMachine}>
+        <Text style={styles.slotTitle}>Skills Machine</Text>
+        <View style={styles.reelRow}>
+          {[reel1, reel2, reel3].map((skill, idx) => (
+            <Animatable.Text
+              key={skill + idx + spinning}
+              animation={spinning ? "bounceIn" : "fadeIn"}
+              duration={300}
+              style={styles.reelText}
+            >
+              {skill}
+            </Animatable.Text>
+          ))}
+        </View>
+        <Button
+          mode="contained"
+          onPress={spinReels}
+          buttonColor={Colors.primary}
+          textColor={Colors.white}
+          disabled={spinning}
+          style={{ marginTop: 20 }}
+        >
+          {spinning ? "Spinning..." : "Spin"}
+        </Button>
+      </View>
 
       <Portal>
         <Modal
@@ -170,26 +256,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: "100%",
   },
-
   bannerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1, // allow the row to stretch and center
+    flex: 1,
   },
-
   bannerTextContainer: {
     justifyContent: "center",
     alignItems: "center",
-    flexShrink: 1, // prevents text from being forced off screen
+    flexShrink: 1,
   },
-
   iconImage: {
     width: 50,
     height: 50,
     borderRadius: 8,
     backgroundColor: "transparent",
-    marginHorizontal: 12, // apply margin to both sides
+    marginHorizontal: 12,
   },
   neonText: {
     color: Colors.yellow,
@@ -209,14 +292,23 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textAlign: "center",
   },
+
+  // 3x2 Project Grid
   cardGrid: {
+    marginBottom: 20,
+  },
+  cardRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 16,
+    justifyContent: "space-evenly", // changed from "space-between"
+    marginBottom: 20,
+  },
+  cardWrapper: {
+    width: 120,
+    alignItems: "center",
   },
   flipCard: {
-    marginBottom: 20,
+    width: 120,
+    height: 160,
   },
   projectCard: {
     width: 120,
@@ -244,6 +336,8 @@ const styles = StyleSheet.create({
     height: 60,
     tintColor: Colors.lightGray,
   },
+
+  // Modal
   modalContent: {
     backgroundColor: Colors.white,
     padding: 24,
@@ -259,5 +353,33 @@ const styles = StyleSheet.create({
   modalDescription: {
     fontSize: 16,
     color: Colors.text,
+  },
+
+  // Skills Slot Machine
+  slotMachine: {
+    alignItems: "center",
+    marginVertical: 40,
+  },
+  slotTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginBottom: 10,
+  },
+  reelRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 12,
+  },
+  reelText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: Colors.yellow,
+    backgroundColor: Colors.black,
+    padding: 12,
+    borderRadius: 8,
+    minWidth: 90,
+    textAlign: "center",
   },
 });

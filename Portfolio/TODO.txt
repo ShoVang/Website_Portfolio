@@ -1,1 +1,2 @@
 add custom font on banner , add roll dice animation ?
+Add slots machine to show skills if 3 match shows jackpot with animation 
