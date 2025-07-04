@@ -35,7 +35,6 @@ const originalProjects = [
   {
     title: "CITS Ticket System",
     description: "Ticket management system for IT company.",
-    //image: require("../../assets/cits-ticket-system.png"),
   },
   {
     title: "Skillin",
@@ -43,23 +42,13 @@ const originalProjects = [
   },
   {
     title: "Trading Bot",
-    description: " Three trading bot for personal use",
+    description: "Three trading bots for personal use",
   },
 ];
 
-// Custom animation for slot machine spin
-const slideDownSlow = {
-  from: {
-    opacity: 0,
-    translateY: -120,
-    scale: 0.8,
-  },
-  to: {
-    opacity: 1,
-    translateY: 0,
-    scale: 1,
-  },
-};
+const SLOT_HEIGHT = 60;
+const VISIBLE_ROWS = 3;
+const slotsToScroll = 5;
 
 export default function HomeScreen() {
   const [flippedCards, setFlippedCards] = useState([]);
@@ -81,9 +70,9 @@ export default function HomeScreen() {
     "Cloud Services",
   ];
   const [reelGrid, setReelGrid] = useState([
-    ["Automation", "Website Building", "App Development"],
-    ["Cloud Computing", "Database Design", "AI Integration"],
-    ["UI/UX Design", "DevOps", "Cybersecurity"],
+    ["Automation", "Cloud Computing", "UI/UX Design"],
+    ["Website Building", "Database Design", "DevOps"],
+    ["App Development", "AI Integration", "Cybersecurity"],
   ]);
   const [spinning, setSpinning] = useState(false);
   const [showFinalGrid, setShowFinalGrid] = useState(false);
@@ -93,15 +82,16 @@ export default function HomeScreen() {
     new Animated.Value(0),
   ]);
 
-  // Helper to get a looped stack of skills for the rolling effect
-  const getLoopedSkillStack = (minLength = 12) => {
+  const getLoopedSkillStack = () => {
+    const totalSlots = slotsToScroll + VISIBLE_ROWS + 2;
     const stack = [];
-    while (stack.length < minLength) {
+    while (stack.length < totalSlots) {
       const shuffled = [...skills].sort(() => 0.5 - Math.random());
       stack.push(...shuffled);
     }
-    return stack.slice(0, minLength);
+    return stack.slice(0, totalSlots);
   };
+
   const [rollingStacks, setRollingStacks] = useState([
     getLoopedSkillStack(),
     getLoopedSkillStack(),
@@ -111,38 +101,29 @@ export default function HomeScreen() {
   const spinReels = () => {
     setSpinning(true);
     setShowFinalGrid(false);
-    // Prepare new stacks for each column
     const newStacks = [
       getLoopedSkillStack(),
       getLoopedSkillStack(),
       getLoopedSkillStack(),
     ];
     setRollingStacks(newStacks);
-    // Reset animations
     reelAnimations.forEach((anim) => anim.setValue(0));
-    // Animate each column
+
     Animated.stagger(
       180,
       [0, 1, 2].map((colIdx) =>
         Animated.timing(reelAnimations[colIdx], {
-          toValue: -5 * 60, // 5 slots down, 60px per slot
+          toValue: -slotsToScroll * SLOT_HEIGHT,
           duration: 1200,
           useNativeDriver: true,
           easing: Easing.out(Easing.cubic),
         })
       )
     ).start(() => {
-      // After animation, set the final skills (always 3)
-      const newGrid = newStacks.map((stack) => stack.slice(5, 8));
-      // If for any reason a column is short, fill with blanks
-      setReelGrid(
-        newGrid.map((col) => {
-          if (col.length < 3) {
-            return [...col, ...Array(3 - col.length).fill("")];
-          }
-          return col;
-        })
+      const newGrid = newStacks.map((stack) =>
+        stack.slice(slotsToScroll, slotsToScroll + VISIBLE_ROWS)
       );
+      setReelGrid(newGrid);
       setShowFinalGrid(true);
       setSpinning(false);
     });
@@ -180,7 +161,6 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Themed Banner */}
       <View style={styles.banner}>
         <View style={styles.bannerContent}>
           <Image
@@ -200,7 +180,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Projects */}
       <View style={styles.cardGrid}>
         {[0, 1].map((row) => (
           <View style={styles.cardRow} key={row}>
@@ -255,7 +234,6 @@ export default function HomeScreen() {
         Shuffle Cards
       </Button>
 
-      {/* Skills Slot Machine */}
       <Card mode="outlined" style={styles.skillCard}>
         <Card.Title title="Skills Machine" titleStyle={styles.neonText} />
         <Card.Content>
@@ -263,10 +241,10 @@ export default function HomeScreen() {
             {[0, 1, 2].map((colIdx) => (
               <View key={colIdx} style={styles.reelColumn}>
                 {showFinalGrid ? (
-                  reelGrid.map((row, rowIdx) => (
+                  Array.from({ length: VISIBLE_ROWS }).map((_, rowIdx) => (
                     <View key={rowIdx} style={styles.reelTextWrapper}>
                       <Text style={styles.reelText}>
-                        {row[colIdx] ? row[colIdx] : " "}
+                        {reelGrid[colIdx]?.[rowIdx] ?? " "}
                       </Text>
                     </View>
                   ))
@@ -313,7 +291,6 @@ export default function HomeScreen() {
         </Card.Content>
       </Card>
 
-      {/* Modal */}
       <Portal>
         <Modal
           visible={modalVisible}
@@ -384,21 +361,12 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     textAlign: "center",
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: Colors.primary,
-    textAlign: "center",
-  },
-
-  // 3x3 Project Grid
   cardGrid: {
     marginBottom: 20,
   },
   cardRow: {
     flexDirection: "row",
-    justifyContent: "space-evenly", // changed from "space-between"
+    justifyContent: "space-evenly",
     marginBottom: 20,
   },
   cardWrapper: {
@@ -435,8 +403,6 @@ const styles = StyleSheet.create({
     height: 60,
     tintColor: Colors.lightGray,
   },
-
-  // Modal
   modalContent: {
     backgroundColor: Colors.white,
     padding: 24,
@@ -453,18 +419,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
   },
-
-  // Skills Slot Machine
-  slotMachine: {
-    alignItems: "center",
-    marginVertical: 40,
-  },
-  slotTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.yellow,
-    marginBottom: 10,
-  },
   skillCard: {
     marginHorizontal: 20,
     marginTop: 40,
@@ -476,7 +430,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
   },
-
   reelGrid: {
     marginTop: 12,
     marginBottom: 12,
@@ -489,7 +442,7 @@ const styles = StyleSheet.create({
     height: 180,
     overflow: "hidden",
     marginHorizontal: 6,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.cardBackground,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: Colors.yellow,
@@ -497,7 +450,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   reelTextWrapper: {
-    height: 60,
+    height: SLOT_HEIGHT,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -509,7 +462,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minWidth: 200,
     textAlign: "center",
-    textAlignVertical: "center",
     padding: 12,
     borderWidth: 2,
     textShadowColor: Colors.yellow,
