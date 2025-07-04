@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Animated,
+  Easing,
 } from "react-native";
 import { Colors } from "../styles/Colors";
 import { Text, Card, Modal, Portal, Button } from "react-native-paper";
@@ -45,6 +47,20 @@ const originalProjects = [
   },
 ];
 
+// Custom animation for slot machine spin
+const slideDownSlow = {
+  from: {
+    opacity: 0,
+    translateY: -120,
+    scale: 0.8,
+  },
+  to: {
+    opacity: 1,
+    translateY: 0,
+    scale: 1,
+  },
+};
+
 export default function HomeScreen() {
   const [flippedCards, setFlippedCards] = useState([]);
   const [shuffledProjects, setShuffledProjects] = useState([]);
@@ -60,25 +76,76 @@ export default function HomeScreen() {
     "Database Design",
     "AI Integration",
     "UI/UX Design",
+    "DevOps",
+    "Cybersecurity",
+    "Cloud Services",
   ];
-  const [reel1, setReel1] = useState(skills[0]);
-  const [reel2, setReel2] = useState(skills[1]);
-  const [reel3, setReel3] = useState(skills[2]);
+  const [reelGrid, setReelGrid] = useState([
+    ["Automation", "Website Building", "App Development"],
+    ["Cloud Computing", "Database Design", "AI Integration"],
+    ["UI/UX Design", "DevOps", "Cybersecurity"],
+  ]);
   const [spinning, setSpinning] = useState(false);
+  const [showFinalGrid, setShowFinalGrid] = useState(false);
+  const [reelAnimations, setReelAnimations] = useState([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]);
+
+  // Helper to get a looped stack of skills for the rolling effect
+  const getLoopedSkillStack = (minLength = 12) => {
+    const stack = [];
+    while (stack.length < minLength) {
+      const shuffled = [...skills].sort(() => 0.5 - Math.random());
+      stack.push(...shuffled);
+    }
+    return stack.slice(0, minLength);
+  };
+  const [rollingStacks, setRollingStacks] = useState([
+    getLoopedSkillStack(),
+    getLoopedSkillStack(),
+    getLoopedSkillStack(),
+  ]);
 
   const spinReels = () => {
     setSpinning(true);
-    let count = 0;
-    const interval = setInterval(() => {
-      setReel1(skills[Math.floor(Math.random() * skills.length)]);
-      setReel2(skills[Math.floor(Math.random() * skills.length)]);
-      setReel3(skills[Math.floor(Math.random() * skills.length)]);
-      count++;
-      if (count > 15) {
-        clearInterval(interval);
-        setSpinning(false);
-      }
-    }, 100);
+    setShowFinalGrid(false);
+    // Prepare new stacks for each column
+    const newStacks = [
+      getLoopedSkillStack(),
+      getLoopedSkillStack(),
+      getLoopedSkillStack(),
+    ];
+    setRollingStacks(newStacks);
+    // Reset animations
+    reelAnimations.forEach((anim) => anim.setValue(0));
+    // Animate each column
+    Animated.stagger(
+      180,
+      [0, 1, 2].map((colIdx) =>
+        Animated.timing(reelAnimations[colIdx], {
+          toValue: -5 * 60, // 5 slots down, 60px per slot
+          duration: 1200,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.cubic),
+        })
+      )
+    ).start(() => {
+      // After animation, set the final skills (always 3)
+      const newGrid = newStacks.map((stack) => stack.slice(5, 8));
+      // If for any reason a column is short, fill with blanks
+      setReelGrid(
+        newGrid.map((col) => {
+          if (col.length < 3) {
+            return [...col, ...Array(3 - col.length).fill("")];
+          }
+          return col;
+        })
+      );
+      setShowFinalGrid(true);
+      setSpinning(false);
+    });
   };
 
   useEffect(() => {
@@ -180,8 +247,8 @@ export default function HomeScreen() {
 
       <Button
         mode="contained"
-        buttonColor={Colors.yellow}
-        textColor={Colors.black}
+        buttonColor={Colors.primary}
+        textColor={Colors.yellow}
         onPress={shuffleCards}
         style={{ marginTop: 30, alignSelf: "center" }}
       >
@@ -189,32 +256,64 @@ export default function HomeScreen() {
       </Button>
 
       {/* Skills Slot Machine */}
-      <View style={styles.slotMachine}>
-        <Text style={styles.slotTitle}>Skills Machine</Text>
-        <View style={styles.reelRow}>
-          {[reel1, reel2, reel3].map((skill, idx) => (
-            <Animatable.Text
-              key={skill + idx + spinning}
-              animation={spinning ? "bounceIn" : "fadeIn"}
-              duration={300}
-              style={styles.reelText}
-            >
-              {skill}
-            </Animatable.Text>
-          ))}
-        </View>
-        <Button
-          mode="contained"
-          onPress={spinReels}
-          buttonColor={Colors.primary}
-          textColor={Colors.white}
-          disabled={spinning}
-          style={{ marginTop: 20 }}
-        >
-          {spinning ? "Spinning..." : "Spin"}
-        </Button>
-      </View>
+      <Card mode="outlined" style={styles.skillCard}>
+        <Card.Title title="Skills Machine" titleStyle={styles.neonText} />
+        <Card.Content>
+          <View style={styles.reelGrid}>
+            {[0, 1, 2].map((colIdx) => (
+              <View key={colIdx} style={styles.reelColumn}>
+                {showFinalGrid ? (
+                  reelGrid.map((row, rowIdx) => (
+                    <View key={rowIdx} style={styles.reelTextWrapper}>
+                      <Text style={styles.reelText}>
+                        {row[colIdx] ? row[colIdx] : " "}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Animated.View
+                    style={{
+                      transform: [{ translateY: reelAnimations[colIdx] }],
+                    }}
+                  >
+                    {rollingStacks[colIdx].map((skill, rowIdx) => (
+                      <View
+                        key={skill + rowIdx + spinning}
+                        style={styles.reelTextWrapper}
+                      >
+                        <Text
+                          style={styles.reelText}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {skill}
+                        </Text>
+                      </View>
+                    ))}
+                  </Animated.View>
+                )}
+              </View>
+            ))}
+          </View>
+          <Button
+            mode="contained"
+            onPress={spinReels}
+            buttonColor={Colors.primary}
+            textColor={Colors.yellow}
+            disabled={spinning}
+            style={{
+              marginTop: 20,
+              shadowColor: Colors.yellow,
+              shadowOpacity: 0.7,
+              shadowRadius: 10,
+            }}
+          >
+            {spinning ? "Spinning..." : "Spin"}
+          </Button>
+        </Card.Content>
+      </Card>
 
+      {/* Modal */}
       <Portal>
         <Modal
           visible={modalVisible}
@@ -278,9 +377,9 @@ const styles = StyleSheet.create({
     color: Colors.yellow,
     fontWeight: "bold",
     fontSize: 28,
-    textShadowColor: "#FFB300",
+    textShadowColor: Colors.neonBlue,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 16,
     letterSpacing: 2,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     textAlign: "center",
@@ -293,7 +392,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // 3x2 Project Grid
+  // 3x3 Project Grid
   cardGrid: {
     marginBottom: 20,
   },
@@ -363,23 +462,59 @@ const styles = StyleSheet.create({
   slotTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: Colors.primary,
+    color: Colors.yellow,
     marginBottom: 10,
   },
-  reelRow: {
+  skillCard: {
+    marginHorizontal: 20,
+    marginTop: 40,
+    paddingBottom: 20,
+    backgroundColor: Colors.cardBackground,
+    borderColor: Colors.yellow,
+    borderWidth: 2,
+    shadowColor: Colors.yellow,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
+
+  reelGrid: {
+    marginTop: 12,
+    marginBottom: 12,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 12,
-    marginTop: 12,
+    alignItems: "center",
+  },
+  reelColumn: {
+    width: 200,
+    height: 180,
+    overflow: "hidden",
+    marginHorizontal: 6,
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.yellow,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reelTextWrapper: {
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
   },
   reelText: {
     fontSize: 20,
     fontWeight: "600",
     color: Colors.yellow,
-    backgroundColor: Colors.black,
-    padding: 12,
+    backgroundColor: Colors.primary,
     borderRadius: 8,
-    minWidth: 90,
+    minWidth: 200,
     textAlign: "center",
+    textAlignVertical: "center",
+    padding: 12,
+    borderWidth: 2,
+    textShadowColor: Colors.yellow,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+    overflow: "hidden",
   },
 });
