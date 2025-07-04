@@ -6,7 +6,7 @@ import HomeScreen from "../screens/HomeScreen";
 import AboutScreen from "../screens/AboutScreen";
 import ContactScreen from "../screens/ContactScreen";
 
-export default function TopTabNavigator() {
+export default function TopTabNavigator({ navigation }) {
   const [index, setIndex] = useState(0);
 
   const routes = [
@@ -18,7 +18,7 @@ export default function TopTabNavigator() {
   const renderScene = () => {
     switch (routes[index].key) {
       case "home":
-        return <HomeScreen />;
+        return <HomeScreen navigation={navigation} />;
       case "about":
         return <AboutScreen />;
       case "contact":

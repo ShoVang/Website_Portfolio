@@ -50,7 +50,7 @@ const SLOT_HEIGHT = 60;
 const VISIBLE_ROWS = 3;
 const slotsToScroll = 5;
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [flippedCards, setFlippedCards] = useState([]);
   const [shuffledProjects, setShuffledProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -305,6 +305,18 @@ export default function HomeScreen() {
               </Text>
               <Button
                 mode="contained"
+                buttonColor={Colors.neonBlue}
+                textColor={Colors.black}
+                onPress={() => {
+                  setModalVisible(false);
+                  navigation.navigate("ProjectDetail", selectedProject);
+                }}
+                style={{ marginTop: 12 }}
+              >
+                More Details
+              </Button>
+              <Button
+                mode="contained"
                 buttonColor={Colors.primary}
                 textColor={Colors.white}
                 onPress={() => setModalVisible(false)}
@@ -417,7 +429,7 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.black,
   },
   skillCard: {
     marginHorizontal: 20,
