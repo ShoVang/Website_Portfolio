@@ -309,7 +309,15 @@ export default function HomeScreen({ navigation }) {
                 textColor={Colors.black}
                 onPress={() => {
                   setModalVisible(false);
-                  navigation.navigate("ProjectDetail", selectedProject);
+                  const { title } = selectedProject;
+
+                  if (title === "Expense Tracker") {
+                    navigation.navigate("ExpenseTracker");
+                  } else if (title === "AI Alert System") {
+                    navigation.navigate("AIAlertSystem");
+                  } else {
+                    navigation.navigate("ProjectDetail", selectedProject);
+                  }
                 }}
                 style={{ marginTop: 12 }}
               >

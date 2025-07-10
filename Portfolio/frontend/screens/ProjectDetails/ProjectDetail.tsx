@@ -2,7 +2,7 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Text, Button } from "react-native-paper";
-import { Colors } from "../styles/Colors";
+import { Colors } from "../../styles/Colors";
 
 export default function ProjectDetail({ route, navigation }) {
   const { title, description, details } = route.params;
