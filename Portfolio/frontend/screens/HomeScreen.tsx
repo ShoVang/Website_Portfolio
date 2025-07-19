@@ -9,9 +9,12 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { Colors } from "../styles/Colors";
-import { Text, Card, Modal, Portal, Button } from "react-native-paper";
+import { Text, Card, Button } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
+
+import PaperModal from "../components/PaperModal";
+import { Colors } from "../styles/Colors";
+import useScreenDimensions from "../hooks/useScreenDimensions";
 
 const icons = {
   back: require("../../assets/icons8-cards-50.png"),
@@ -51,6 +54,12 @@ const VISIBLE_ROWS = 3;
 const slotsToScroll = 5;
 
 export default function HomeScreen({ navigation }) {
+  const {
+    height: screenHeight,
+    width: screenWidth,
+    isLandscape,
+  } = useScreenDimensions();
+
   const [flippedCards, setFlippedCards] = useState([]);
   const [shuffledProjects, setShuffledProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -69,6 +78,7 @@ export default function HomeScreen({ navigation }) {
     "Cybersecurity",
     "Cloud Services",
   ];
+
   const [reelGrid, setReelGrid] = useState([
     ["Automation", "Cloud Computing", "UI/UX Design"],
     ["Website Building", "Database Design", "DevOps"],
@@ -163,20 +173,12 @@ export default function HomeScreen({ navigation }) {
     <ScrollView style={styles.container}>
       <View style={styles.banner}>
         <View style={styles.bannerContent}>
-          <Image
-            source={icons.chip}
-            style={[styles.iconImage, { marginRight: 12 }]}
-            resizeMode="contain"
-          />
+          <Image source={icons.chip} style={styles.iconImage} />
           <View style={styles.bannerTextContainer}>
             <Text style={styles.neonText}>ROLL THE DICE</Text>
             <Text style={styles.neonText}>HIRE ME</Text>
           </View>
-          <Image
-            source={icons.dice}
-            style={[styles.iconImage, { marginLeft: 12 }]}
-            resizeMode="contain"
-          />
+          <Image source={icons.dice} style={styles.iconImage} />
         </View>
       </View>
 
@@ -259,13 +261,7 @@ export default function HomeScreen({ navigation }) {
                         key={skill + rowIdx + spinning}
                         style={styles.reelTextWrapper}
                       >
-                        <Text
-                          style={styles.reelText}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
-                        >
-                          {skill}
-                        </Text>
+                        <Text style={styles.reelText}>{skill}</Text>
                       </View>
                     ))}
                   </Animated.View>
@@ -279,63 +275,56 @@ export default function HomeScreen({ navigation }) {
             buttonColor={Colors.primary}
             textColor={Colors.yellow}
             disabled={spinning}
-            style={{
-              marginTop: 20,
-              shadowColor: Colors.yellow,
-              shadowOpacity: 0.7,
-              shadowRadius: 10,
-            }}
+            style={{ marginTop: 20 }}
           >
             {spinning ? "Spinning..." : "Spin"}
           </Button>
         </Card.Content>
       </Card>
 
-      <Portal>
-        <Modal
-          visible={modalVisible}
-          onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={styles.modalContent}
-        >
-          {selectedProject && (
-            <>
-              <Text style={styles.modalTitle}>{selectedProject.title}</Text>
-              <Text style={styles.modalDescription}>
-                {selectedProject.description}
-              </Text>
-              <Button
-                mode="contained"
-                buttonColor={Colors.neonBlue}
-                textColor={Colors.black}
-                onPress={() => {
-                  setModalVisible(false);
-                  const { title } = selectedProject;
-
-                  if (title === "Expense Tracker") {
-                    navigation.navigate("ExpenseTracker");
-                  } else if (title === "AI Alert System") {
-                    navigation.navigate("AIAlertSystem");
-                  } else {
-                    navigation.navigate("ProjectDetail", selectedProject);
-                  }
-                }}
-                style={{ marginTop: 12 }}
-              >
-                More Details
-              </Button>
-              <Button
-                mode="contained"
-                buttonColor={Colors.primary}
-                textColor={Colors.white}
-                onPress={() => setModalVisible(false)}
-                style={{ marginTop: 20 }}
-              >
-                Close
-              </Button>
-            </>
-          )}
-        </Modal>
-      </Portal>
+      <PaperModal
+        visible={modalVisible}
+        onDismiss={() => setModalVisible(false)}
+        title={selectedProject?.title}
+        height="60%"
+        width="90%"
+      >
+        {selectedProject && (
+          <>
+            <Text style={styles.modalTitle}>{selectedProject.title}</Text>
+            <Text style={styles.modalDescription}>
+              {selectedProject.description}
+            </Text>
+            <Button
+              mode="contained"
+              buttonColor={Colors.neonBlue}
+              textColor={Colors.black}
+              onPress={() => {
+                setModalVisible(false);
+                const { title } = selectedProject;
+                if (title === "Expense Tracker") {
+                  navigation.navigate("ExpenseTracker");
+                } else if (title === "AI Alert System") {
+                  navigation.navigate("AIAlertSystem");
+                } else {
+                  navigation.navigate("ProjectDetail", selectedProject);
+                }
+              }}
+              style={{ marginTop: 12 }}
+            >
+              More Details
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => setModalVisible(false)}
+              style={[styles.closeButton, { backgroundColor: Colors.primary }]}
+              labelStyle={{ color: Colors.white }}
+            >
+              Close
+            </Button>
+          </>
+        )}
+      </PaperModal>
     </ScrollView>
   );
 }
@@ -356,12 +345,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
   },
   bannerTextContainer: {
     justifyContent: "center",
     alignItems: "center",
-    flexShrink: 1,
   },
   iconImage: {
     width: 50,
@@ -423,12 +410,6 @@ const styles = StyleSheet.create({
     height: 60,
     tintColor: Colors.lightGray,
   },
-  modalContent: {
-    backgroundColor: Colors.white,
-    padding: 24,
-    marginHorizontal: 20,
-    borderRadius: 10,
-  },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -488,5 +469,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
     overflow: "hidden",
+  },
+  closeButton: {
+    marginTop: 20,
+    alignSelf: "center",
   },
 });
