@@ -1,10 +1,12 @@
+Add email .js for the contact part 
+
 keep adding the projects.
     when u click on the images it enhances them / blows them up in a modal 
 
 add custom font on banner , add roll dice animation ?
 fix the font stuff
 
-Modal needs to look better 
+Modal needs to look better , when u click on the cards 
 
 Add slots machine to show skills if 3 match shows jackpot with animation ,
  make skill machine smaller , takes up whols screen

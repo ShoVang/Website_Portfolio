@@ -7,6 +7,10 @@ import AIAlertSystem from "../screens/ProjectDetails/AIAlertSystem";
 import Skillin from "../screens/ProjectDetails/Skillin";
 import CITSTicketSystem from "../screens/ProjectDetails/CITSTicketSystem";
 import TradingBots from "../screens/ProjectDetails/TradingBots";
+import CryptoBotDetails from "../screens/ProjectDetails/BotDetails/CryptoBotDetails";
+import ForexBotDetails from "../screens/ProjectDetails/BotDetails/ForexBotDetails";
+import StockBotDetails from "../screens/ProjectDetails/BotDetails/StockBotDetails";
+import ProjectDetailsPortfolioWebsite from "../screens/ProjectDetails/ProjectDetailsPortfolioWebsite";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +33,26 @@ export default function RootNavigator() {
         name="AIAlertSystem"
         component={AIAlertSystem}
         options={{ title: "AI Alert System" }}
+      />
+      <Stack.Screen
+        name="CryptoBotDetails"
+        component={CryptoBotDetails}
+        options={{ title: "Crypto Bot Details" }}
+      />
+      <Stack.Screen
+        name="ForexBotDetails"
+        component={ForexBotDetails}
+        options={{ title: "Forex Bot Details" }}
+      />
+      <Stack.Screen
+        name="StockBotDetails"
+        component={StockBotDetails}
+        options={{ title: "Stock Bot Details" }}
+      />
+      <Stack.Screen
+        name="ProjectDetailsPortfolioWebsite"
+        component={ProjectDetailsPortfolioWebsite}
+        options={{ title: "Portfolio Website" }}
       />
       <Stack.Screen
         name="Skillin"
