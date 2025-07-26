@@ -306,6 +306,12 @@ export default function HomeScreen({ navigation }) {
                   navigation.navigate("ExpenseTracker");
                 } else if (title === "AI Alert System") {
                   navigation.navigate("AIAlertSystem");
+                } else if (title === "Skillin") {
+                  navigation.navigate("Skillin");
+                } else if (title === "CITS Ticket System") {
+                  navigation.navigate("CITSTicketSystem");
+                } else if (title === "Trading Bot") {
+                  navigation.navigate("TradingBots");
                 } else {
                   navigation.navigate("ProjectDetail", selectedProject);
                 }

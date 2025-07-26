@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: Colors.cardBackground,
     color: Colors.white,
-    borderColor: Colors.lightGray,
+    borderColor: Colors.background,
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 16,

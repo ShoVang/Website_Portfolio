@@ -1,4 +1,5 @@
 keep adding the projects.
+    when u click on the images it enhances them / blows them up in a modal 
 
 add custom font on banner , add roll dice animation ?
 fix the font stuff
