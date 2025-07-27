@@ -237,7 +237,7 @@ export default function HomeScreen({ navigation }) {
       </Button>
 
       <Card mode="outlined" style={styles.skillCard}>
-        <Card.Title title="Skills Machine" titleStyle={styles.neonText} />
+        <Card.Title title="Skills Slot Machine" titleStyle={styles.neonText} />
         <Card.Content>
           <View style={styles.reelGrid}>
             {[0, 1, 2].map((colIdx) => (
@@ -309,6 +309,12 @@ export default function HomeScreen({ navigation }) {
                   navigation.navigate("ExpenseTracker");
                 } else if (title === "AI Alert System") {
                   navigation.navigate("AIAlertSystem");
+                } else if (title === "CITS Ticket System") {
+                  navigation.navigate("CITSTicketSystem");
+                } else if (title === "Skillin") {
+                  navigation.navigate("Skillin");
+                } else if (title === "Trading Bot") {
+                  navigation.navigate("TradingBots");
                 } else {
                   navigation.navigate("ProjectDetail", selectedProject);
                 }

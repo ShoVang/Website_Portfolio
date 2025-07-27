@@ -6,26 +6,56 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Alert,
 } from "react-native";
-import { Text, Button } from "react-native-paper";
+import { Text, Button, Portal, Modal } from "react-native-paper";
 import { Colors } from "../styles/Colors";
+import emailjs from "@emailjs/browser";
 
 export default function ContactScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   const handleSubmit = () => {
     if (!name || !email || !message) {
-      Alert.alert("Please fill out all fields.");
+      setModalMessage("Please fill out all fields.");
+      setModalVisible(true);
       return;
     }
-    // Handle form submission here (e.g., send to server or email API)
-    Alert.alert("Message sent!", "Thank you for reaching out.");
-    setName("");
-    setEmail("");
-    setMessage("");
+
+    setLoading(true);
+
+    const templateParams = {
+      to_name: "SSV Designers",
+      from_name: name,
+      message: message,
+      reply_to: email,
+    };
+
+    emailjs
+      .send(
+        "service_a0p3xpk",
+        "template_0mut4y7",
+        templateParams,
+        "bJfN3-EWhmjF9bba0"
+      )
+      .then(() => {
+        setLoading(false);
+        setModalMessage("Message Sent! Thank you for reaching out.");
+        setModalVisible(true);
+        setName("");
+        setEmail("");
+        setMessage("");
+      })
+      .catch(() => {
+        setLoading(false);
+        setModalMessage("Message Failed. Please try again later.");
+        setModalVisible(true);
+      });
   };
 
   return (
@@ -40,9 +70,8 @@ export default function ContactScreen() {
         </View>
 
         <Text style={styles.introText}>
-          If you'd like to work together or have any questions, please feel free
-          to reach out by filling out the form below. I’ll get back to you as
-          soon as possible!
+          If you'd like to work together or have any questions, please fill out
+          the form below. I’ll get back to you as soon as possible!
         </Text>
 
         <TextInput
@@ -77,10 +106,29 @@ export default function ContactScreen() {
           textColor={Colors.yellow}
           onPress={handleSubmit}
           style={styles.submitButton}
+          disabled={loading}
         >
-          Send Message
+          {loading ? "Sending..." : "Send Message"}
         </Button>
       </KeyboardAvoidingView>
+
+      {/* Modal for messages */}
+      <Portal>
+        <Modal
+          visible={modalVisible}
+          onDismiss={() => setModalVisible(false)}
+          contentContainerStyle={styles.modalContainer}
+        >
+          <Text style={styles.modalText}>{modalMessage}</Text>
+          <Button
+            mode="contained"
+            onPress={() => setModalVisible(false)}
+            style={styles.modalButton}
+          >
+            OK
+          </Button>
+        </Modal>
+      </Portal>
     </ScrollView>
   );
 }
@@ -140,6 +188,21 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: 10,
+    alignSelf: "center",
+  },
+  modalContainer: {
+    backgroundColor: Colors.cardBackground,
+    padding: 20,
+    margin: 20,
+    borderRadius: 10,
+  },
+  modalText: {
+    color: Colors.white,
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalButton: {
     alignSelf: "center",
   },
 });

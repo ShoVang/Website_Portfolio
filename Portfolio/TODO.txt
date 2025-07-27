@@ -11,3 +11,4 @@ Modal needs to look better , when u click on the cards
 Add slots machine to show skills if 3 match shows jackpot with animation ,
  make skill machine smaller , takes up whols screen
  show jack pot animation and make it it a bar to pull down
+ make it more obvouis to click on the cards and 
