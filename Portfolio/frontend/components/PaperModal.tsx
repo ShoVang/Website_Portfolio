@@ -18,11 +18,7 @@ export default function PaperModal({
   height = "75%",
   width = "85%",
 }: PaperModalProps) {
-  const {
-    height: screenHeight,
-    width: screenWidth,
-    isLandscape,
-  } = useScreenDimensions();
+  const { height: screenHeight, width: screenWidth } = useScreenDimensions();
 
   return (
     <Portal>
@@ -43,7 +39,10 @@ export default function PaperModal({
           },
         ]}
       >
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {children}
         </ScrollView>
       </Modal>
@@ -54,12 +53,20 @@ export default function PaperModal({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "white",
-    borderRadius: 12,
+    borderRadius: 16,
     alignSelf: "center",
-    padding: 20,
+    padding: 24,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   content: {
     flexGrow: 1,
-    justifyContent: "space-between",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: 16, // optional: supported in newer RN versions
+    paddingBottom: 12,
   },
 });

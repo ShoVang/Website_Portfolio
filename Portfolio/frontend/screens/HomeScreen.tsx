@@ -286,8 +286,8 @@ export default function HomeScreen({ navigation }) {
         visible={modalVisible}
         onDismiss={() => setModalVisible(false)}
         title={selectedProject?.title}
-        height="60%"
-        width="90%"
+        height="50%"
+        width="50%"
       >
         {selectedProject && (
           <>
@@ -297,7 +297,11 @@ export default function HomeScreen({ navigation }) {
             </Text>
             <Button
               mode="contained"
-              buttonColor={Colors.neonBlue}
+              style={[
+                styles.closeButton,
+                { backgroundColor: Colors.secondary },
+                { marginTop: 12 },
+              ]}
               textColor={Colors.black}
               onPress={() => {
                 setModalVisible(false);
@@ -319,7 +323,6 @@ export default function HomeScreen({ navigation }) {
                   navigation.navigate("ProjectDetail", selectedProject);
                 }
               }}
-              style={{ marginTop: 12 }}
             >
               More Details
             </Button>
@@ -420,13 +423,13 @@ const styles = StyleSheet.create({
     tintColor: Colors.lightGray,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 40,
     fontWeight: "bold",
     marginBottom: 10,
     color: Colors.primary,
   },
   modalDescription: {
-    fontSize: 16,
+    fontSize: 20,
     color: Colors.black,
   },
   skillCard: {
