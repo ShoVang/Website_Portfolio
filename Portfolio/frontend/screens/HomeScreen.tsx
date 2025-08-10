@@ -48,6 +48,10 @@ const SLOT_HEIGHT = 60;
 const VISIBLE_ROWS = 3;
 const slotsToScroll = 5;
 
+// Match your card sizes from styles
+const CARD_W = 120;
+const CARD_H = 160;
+
 export default function HomeScreen({ navigation }) {
   const { height: screenHeight, width: screenWidth } = useScreenDimensions();
 
@@ -55,7 +59,132 @@ export default function HomeScreen({ navigation }) {
   const [shuffledProjects, setShuffledProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [shuffleKey, setShuffleKey] = useState(0);
+  const [shuffleKey, setShuffleKey] = useState(0); // only used for the initial shuffle if you like
+
+  // only bounce once on initial mount
+  const [didMount, setDidMount] = useState(false);
+  useEffect(() => {
+    setDidMount(true);
+  }, []);
+
+  // ====== MEASUREMENT for true center gather ======
+  const [gridWidth, setGridWidth] = useState(0);
+  const rowYsRef = useRef([0, 0]); // y of each row inside cardGrid
+  const onRowLayout = (rowIdx: number) => (e: any) => {
+    rowYsRef.current[rowIdx] = e.nativeEvent.layout.y;
+  };
+  // =================================================
+
+  // ====== SHUFFLE ANIMATION STATE ======
+  const cardAnims = useRef(
+    Array.from({ length: 6 }, () => new Animated.Value(0))
+  ).current;
+  const [isShuffling, setIsShuffling] = useState(false);
+
+  // per-card deltas to the grid center
+  const [gatherOffsets, setGatherOffsets] = useState(
+    Array.from({ length: 6 }, () => ({ dx: 0, dy: 0 }))
+  );
+
+  const getCardAnimStyle = (slotIndex: number) => {
+    const v = cardAnims[slotIndex];
+    const { dx, dy } = gatherOffsets[slotIndex] ?? { dx: 0, dy: 0 };
+
+    const tx = v.interpolate({ inputRange: [0, 1], outputRange: [0, dx] });
+    const ty = v.interpolate({ inputRange: [0, 1], outputRange: [0, dy] });
+    const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 0.95] });
+    const rot = v.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["0deg", "2deg"],
+    }); // subtle
+
+    return {
+      transform: [
+        { translateX: tx },
+        { translateY: ty },
+        { scale },
+        { rotate: rot },
+      ],
+    };
+  };
+
+  // Compute dx/dy for each card to the grid center
+  const computeGatherOffsets = () => {
+    // If we haven’t measured yet, fall back to a reasonable approximation
+    if (!gridWidth || rowYsRef.current[1] === undefined) {
+      const approx = Array.from({ length: 6 }, (_, i) => {
+        const row = Math.floor(i / 3);
+        const col = i % 3;
+        const dx = col === 0 ? 90 : col === 2 ? -90 : 0;
+        const dy = row === 0 ? 80 : -80;
+        return { dx, dy };
+      });
+      setGatherOffsets(approx);
+      return;
+    }
+
+    const gapX = Math.max(0, (gridWidth - 3 * CARD_W) / 4); // space-evenly gap approximation
+    const colCenterX = (col: number) => gapX * (col + 1) + CARD_W * (col + 0.5); // gap + card centers
+    const targetCenterX = gridWidth / 2;
+
+    const rowY = rowYsRef.current; // top Y of each row inside cardGrid
+    const rowCenterY = (row: number) => rowY[row] + CARD_H / 2;
+    const targetCenterY = (rowCenterY(0) + rowCenterY(1)) / 2; // halfway between the two row centers
+
+    const offsets = Array.from({ length: 6 }, (_, i) => {
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      const dx = targetCenterX - colCenterX(col);
+      const dy = targetCenterY - rowCenterY(row);
+      return { dx, dy };
+    });
+
+    setGatherOffsets(offsets);
+  };
+
+  const shuffleWithAnimation = () => {
+    if (isShuffling) return;
+    setIsShuffling(true);
+
+    // compute where to gather BEFORE starting
+    computeGatherOffsets();
+
+    // Phase 1: gather to grid center
+    Animated.stagger(
+      50,
+      cardAnims.map((v) =>
+        Animated.timing(v, {
+          toValue: 1,
+          duration: 260,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        })
+      )
+    ).start(() => {
+      // Shuffle data while gathered
+      const newOrder = shuffleArray(originalProjects);
+      setShuffledProjects(newOrder);
+      setFlippedCards(Array(newOrder.length).fill(false));
+      setSelectedProject(null);
+      // DO NOT bump a key here (keep views mounted)
+
+      // Phase 2: scatter back with randomized order for organic feel
+      Animated.stagger(
+        60,
+        cardAnims
+          .map((v) =>
+            Animated.timing(v, {
+              toValue: 0,
+              duration: 340,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            })
+          )
+          .sort(() => 0.5 - Math.random())
+      ).start(() => setIsShuffling(false));
+    });
+  };
+  // =====================================
 
   const skills = [
     "Automation",
@@ -85,7 +214,7 @@ export default function HomeScreen({ navigation }) {
 
   const getLoopedSkillStack = () => {
     const totalSlots = slotsToScroll + VISIBLE_ROWS + 2;
-    const stack = [];
+    const stack: string[] = [];
     while (stack.length < totalSlots) {
       const shuffled = [...skills].sort(() => 0.5 - Math.random());
       stack.push(...shuffled);
@@ -132,8 +261,8 @@ export default function HomeScreen({ navigation }) {
   };
 
   // ---------- Lever (Pull-to-Spin) ----------
-  const MAX_PULL = 110; // how far the lever can be dragged
-  const TRIGGER_PULL = 70; // threshold to trigger spin on release
+  const MAX_PULL = 110;
+  const TRIGGER_PULL = 70;
   const leverY = useRef(new Animated.Value(0)).current;
   const [dragging, setDragging] = useState(false);
 
@@ -146,21 +275,15 @@ export default function HomeScreen({ navigation }) {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => !spinning,
-      onMoveShouldSetPanResponder: (_, g) => {
-        // Capture only meaningful vertical drags to avoid scroll stealing
-        return (
-          !spinning && Math.abs(g.dy) > Math.abs(g.dx) && Math.abs(g.dy) > 4
-        );
-      },
-      onPanResponderGrant: () => {
-        setDragging(true);
-      },
+      onMoveShouldSetPanResponder: (_, g) =>
+        !spinning && Math.abs(g.dy) > Math.abs(g.dx) && Math.abs(g.dy) > 4,
+      onPanResponderGrant: () => setDragging(true),
       onPanResponderMove: (_, gesture) => {
         if (spinning) return;
         const pull = Math.max(0, Math.min(MAX_PULL, gesture.dy));
         leverY.setValue(pull);
       },
-      onPanResponderTerminationRequest: () => false, // don't let parent steal it mid-drag
+      onPanResponderTerminationRequest: () => false,
       onPanResponderRelease: (_, gesture) => {
         setDragging(false);
         const pulledEnough = gesture.dy >= TRIGGER_PULL;
@@ -191,10 +314,12 @@ export default function HomeScreen({ navigation }) {
   // -----------------------------------------
 
   useEffect(() => {
+    // initial populate
     shuffleCards();
   }, []);
 
-  const handleCardPress = (index) => {
+  const handleCardPress = (index: number) => {
+    if (isShuffling) return;
     const updatedFlipped = [...flippedCards];
     updatedFlipped[index] = true;
     setFlippedCards(updatedFlipped);
@@ -202,7 +327,7 @@ export default function HomeScreen({ navigation }) {
     setModalVisible(true);
   };
 
-  const shuffleArray = (arr) => {
+  const shuffleArray = (arr: any[]) => {
     const copy = [...arr];
     for (let i = copy.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -217,7 +342,7 @@ export default function HomeScreen({ navigation }) {
     setFlippedCards(Array(newOrder.length).fill(false));
     setSelectedProject(null);
     setModalVisible(false);
-    setShuffleKey((prev) => prev + 1);
+    setShuffleKey((prev) => prev + 1); // optional for initial mount only
   };
 
   return (
@@ -236,43 +361,56 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.tapHint}>
         <Text style={styles.tapHintText}>Tap a card to reveal</Text>
       </View>
-      <View style={styles.cardGrid}>
+
+      {/* Measure grid width here */}
+      <View
+        style={styles.cardGrid}
+        onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+      >
         {[0, 1].map((row) => (
-          <View style={styles.cardRow} key={row}>
+          <View style={styles.cardRow} key={row} onLayout={onRowLayout(row)}>
             {shuffledProjects
               .slice(row * 3, row * 3 + 3)
               .map((project, index) => {
                 const globalIndex = row * 3 + index;
                 return (
                   <Pressable
-                    key={globalIndex}
-                    onPress={() => handleCardPress(globalIndex)}
+                    key={globalIndex} // stable: do NOT include shuffleKey here
+                    onPress={
+                      !isShuffling
+                        ? () => handleCardPress(globalIndex)
+                        : undefined
+                    }
                     style={styles.cardWrapper}
                   >
-                    <Animatable.View
-                      animation="bounceIn"
-                      delay={globalIndex * 100}
-                      duration={600}
-                      key={`${shuffleKey}-${globalIndex}`}
-                      style={styles.flipCard}
+                    {/* Animated wrapper handles gather/scatter */}
+                    <Animated.View
+                      style={[styles.flipCard, getCardAnimStyle(globalIndex)]}
                     >
-                      {flippedCards[globalIndex] ? (
-                        <Card style={styles.projectCard}>
-                          <Card.Content>
-                            <Text style={styles.projectTitle}>
-                              {project.title}
-                            </Text>
-                          </Card.Content>
-                        </Card>
-                      ) : (
-                        <View style={styles.cardBack}>
-                          <Image
-                            source={icons.back}
-                            style={styles.cardBackImage}
-                          />
-                        </View>
-                      )}
-                    </Animatable.View>
+                      {/* Only bounce on the very first mount */}
+                      <Animatable.View
+                        animation={!didMount ? "bounceIn" : undefined}
+                        delay={!didMount ? globalIndex * 100 : 0}
+                        duration={600}
+                      >
+                        {flippedCards[globalIndex] ? (
+                          <Card style={styles.projectCard}>
+                            <Card.Content>
+                              <Text style={styles.projectTitle}>
+                                {project.title}
+                              </Text>
+                            </Card.Content>
+                          </Card>
+                        ) : (
+                          <View style={styles.cardBack}>
+                            <Image
+                              source={icons.back}
+                              style={styles.cardBackImage}
+                            />
+                          </View>
+                        )}
+                      </Animatable.View>
+                    </Animated.View>
                   </Pressable>
                 );
               })}
@@ -280,15 +418,16 @@ export default function HomeScreen({ navigation }) {
         ))}
       </View>
 
-      {/* Moved here: directly below cards, above the slot machine */}
+      {/* Shuffle button (animated shuffle) */}
       <Button
         mode="contained"
         buttonColor={Colors.primary}
         textColor={Colors.yellow}
-        onPress={shuffleCards}
+        onPress={shuffleWithAnimation}
+        disabled={isShuffling}
         style={{ marginTop: 10, marginBottom: 10, alignSelf: "center" }}
       >
-        Shuffle Cards
+        {isShuffling ? "Shuffling..." : "Shuffle Cards"}
       </Button>
 
       <Card mode="outlined" style={styles.skillCard}>
@@ -348,12 +487,10 @@ export default function HomeScreen({ navigation }) {
                 <Text
                   style={[
                     styles.leverLabel,
-                    Platform.OS === "web"
-                      ? { userSelect: "none" as any }
-                      : null,
+                    Platform.OS === "web" ? { userSelect: "none" } : null,
                   ]}
-                  selectable={false} // prevent text selection
-                  pointerEvents="none" // make sure text never steals touches
+                  selectable={false}
+                  pointerEvents="none"
                 >
                   PULL
                 </Text>
@@ -362,8 +499,6 @@ export default function HomeScreen({ navigation }) {
           </View>
         </Card.Content>
       </Card>
-
-      {/* (Removed the old Shuffle Cards button that was here) */}
 
       <PaperModal
         visible={modalVisible}
@@ -459,10 +594,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     textAlign: "center",
   },
-  tapHint: {
-    alignItems: "center",
-    marginBottom: 8,
-  },
+  tapHint: { alignItems: "center", marginBottom: 8 },
   tapHintText: {
     fontSize: 14,
     fontWeight: "600",
@@ -481,11 +613,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     marginBottom: 20,
   },
-  cardWrapper: { width: 120, alignItems: "center" },
-  flipCard: { width: 120, height: 160 },
+  cardWrapper: { width: CARD_W, alignItems: "center" },
+  flipCard: { width: CARD_W, height: CARD_H },
   projectCard: {
-    width: 120,
-    height: 160,
+    width: CARD_W,
+    height: CARD_H,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: Colors.primary,
@@ -497,8 +629,8 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   cardBack: {
-    width: 120,
-    height: 160,
+    width: CARD_W,
+    height: CARD_H,
     backgroundColor: Colors.black,
     justifyContent: "center",
     alignItems: "center",
