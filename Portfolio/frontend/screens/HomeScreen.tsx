@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Easing,
+  PanResponder,
 } from "react-native";
 import { Text, Card, Button } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
@@ -39,14 +40,8 @@ const originalProjects = [
     title: "CITS Ticket System",
     description: "Ticket management system for IT company.",
   },
-  {
-    title: "Skillin",
-    description: "CDN for Skillin",
-  },
-  {
-    title: "Trading Bot",
-    description: "Three trading bots for personal use",
-  },
+  { title: "Skillin", description: "CDN for Skillin" },
+  { title: "Trading Bot", description: "Three trading bots for personal use" },
 ];
 
 const SLOT_HEIGHT = 60;
@@ -54,11 +49,7 @@ const VISIBLE_ROWS = 3;
 const slotsToScroll = 5;
 
 export default function HomeScreen({ navigation }) {
-  const {
-    height: screenHeight,
-    width: screenWidth,
-    isLandscape,
-  } = useScreenDimensions();
+  const { height: screenHeight, width: screenWidth } = useScreenDimensions();
 
   const [flippedCards, setFlippedCards] = useState([]);
   const [shuffledProjects, setShuffledProjects] = useState([]);
@@ -86,7 +77,7 @@ export default function HomeScreen({ navigation }) {
   ]);
   const [spinning, setSpinning] = useState(false);
   const [showFinalGrid, setShowFinalGrid] = useState(false);
-  const [reelAnimations, setReelAnimations] = useState([
+  const [reelAnimations] = useState([
     new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
@@ -109,6 +100,7 @@ export default function HomeScreen({ navigation }) {
   ]);
 
   const spinReels = () => {
+    if (spinning) return;
     setSpinning(true);
     setShowFinalGrid(false);
     const newStacks = [
@@ -138,6 +130,65 @@ export default function HomeScreen({ navigation }) {
       setSpinning(false);
     });
   };
+
+  // ---------- Lever (Pull-to-Spin) ----------
+  const MAX_PULL = 110; // how far the lever can be dragged
+  const TRIGGER_PULL = 70; // threshold to trigger spin on release
+  const leverY = useRef(new Animated.Value(0)).current;
+  const [dragging, setDragging] = useState(false);
+
+  const leverKnobRotate = leverY.interpolate({
+    inputRange: [0, MAX_PULL],
+    outputRange: ["0deg", "25deg"],
+    extrapolate: "clamp",
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !spinning,
+      onMoveShouldSetPanResponder: (_, g) => {
+        // Capture only meaningful vertical drags to avoid scroll stealing
+        return (
+          !spinning && Math.abs(g.dy) > Math.abs(g.dx) && Math.abs(g.dy) > 4
+        );
+      },
+      onPanResponderGrant: () => {
+        setDragging(true);
+      },
+      onPanResponderMove: (_, gesture) => {
+        if (spinning) return;
+        const pull = Math.max(0, Math.min(MAX_PULL, gesture.dy));
+        leverY.setValue(pull);
+      },
+      onPanResponderTerminationRequest: () => false, // don't let parent steal it mid-drag
+      onPanResponderRelease: (_, gesture) => {
+        setDragging(false);
+        const pulledEnough = gesture.dy >= TRIGGER_PULL;
+        if (pulledEnough && !spinning) {
+          Animated.sequence([
+            Animated.timing(leverY, {
+              toValue: MAX_PULL,
+              duration: 80,
+              useNativeDriver: true,
+            }),
+            Animated.spring(leverY, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 10,
+            }),
+          ]).start();
+          spinReels();
+        } else {
+          Animated.spring(leverY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
+  // -----------------------------------------
 
   useEffect(() => {
     shuffleCards();
@@ -170,7 +221,8 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    // Disable ScrollView scrolling while the lever is being dragged
+    <ScrollView style={styles.container} scrollEnabled={!dragging}>
       <View style={styles.banner}>
         <View style={styles.bannerContent}>
           <Image source={icons.chip} style={styles.iconImage} />
@@ -181,7 +233,9 @@ export default function HomeScreen({ navigation }) {
           <Image source={icons.dice} style={styles.iconImage} />
         </View>
       </View>
-
+      <View style={styles.tapHint}>
+        <Text style={styles.tapHintText}>Tap a card to reveal</Text>
+      </View>
       <View style={styles.cardGrid}>
         {[0, 1].map((row) => (
           <View style={styles.cardRow} key={row}>
@@ -226,12 +280,13 @@ export default function HomeScreen({ navigation }) {
         ))}
       </View>
 
+      {/* Moved here: directly below cards, above the slot machine */}
       <Button
         mode="contained"
         buttonColor={Colors.primary}
         textColor={Colors.yellow}
         onPress={shuffleCards}
-        style={{ marginTop: 30, alignSelf: "center" }}
+        style={{ marginTop: 10, marginBottom: 10, alignSelf: "center" }}
       >
         Shuffle Cards
       </Button>
@@ -239,48 +294,76 @@ export default function HomeScreen({ navigation }) {
       <Card mode="outlined" style={styles.skillCard}>
         <Card.Title title="Skills Slot Machine" titleStyle={styles.neonText} />
         <Card.Content>
-          <View style={styles.reelGrid}>
-            {[0, 1, 2].map((colIdx) => (
-              <View key={colIdx} style={styles.reelColumn}>
-                {showFinalGrid ? (
-                  Array.from({ length: VISIBLE_ROWS }).map((_, rowIdx) => (
-                    <View key={rowIdx} style={styles.reelTextWrapper}>
-                      <Text style={styles.reelText}>
-                        {reelGrid[colIdx]?.[rowIdx] ?? " "}
-                      </Text>
-                    </View>
-                  ))
-                ) : (
-                  <Animated.View
-                    style={{
-                      transform: [{ translateY: reelAnimations[colIdx] }],
-                    }}
-                  >
-                    {rollingStacks[colIdx].map((skill, rowIdx) => (
-                      <View
-                        key={skill + rowIdx + spinning}
-                        style={styles.reelTextWrapper}
-                      >
-                        <Text style={styles.reelText}>{skill}</Text>
+          <View style={styles.slotRow}>
+            {/* Reels */}
+            <View style={styles.reelGrid}>
+              {[0, 1, 2].map((colIdx) => (
+                <View key={colIdx} style={styles.reelColumn}>
+                  {showFinalGrid ? (
+                    Array.from({ length: VISIBLE_ROWS }).map((_, rowIdx) => (
+                      <View key={rowIdx} style={styles.reelTextWrapper}>
+                        <Text style={styles.reelText}>
+                          {reelGrid[colIdx]?.[rowIdx] ?? " "}
+                        </Text>
                       </View>
-                    ))}
-                  </Animated.View>
-                )}
-              </View>
-            ))}
+                    ))
+                  ) : (
+                    <Animated.View
+                      style={{
+                        transform: [{ translateY: reelAnimations[colIdx] }],
+                      }}
+                    >
+                      {rollingStacks[colIdx].map((skill, rowIdx) => (
+                        <View
+                          key={skill + rowIdx + spinning}
+                          style={styles.reelTextWrapper}
+                        >
+                          <Text style={styles.reelText}>{skill}</Text>
+                        </View>
+                      ))}
+                    </Animated.View>
+                  )}
+                </View>
+              ))}
+            </View>
+
+            {/* Lever — attach panHandlers to the whole container */}
+            <Animated.View
+              style={styles.leverContainer}
+              {...panResponder.panHandlers}
+            >
+              <View style={styles.leverTrack} />
+              <Animated.View
+                style={[
+                  styles.leverHandle,
+                  { transform: [{ translateY: leverY }] },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.leverKnob,
+                    { transform: [{ rotate: leverKnobRotate }] },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.leverLabel,
+                    Platform.OS === "web"
+                      ? { userSelect: "none" as any }
+                      : null,
+                  ]}
+                  selectable={false} // prevent text selection
+                  pointerEvents="none" // make sure text never steals touches
+                >
+                  PULL
+                </Text>
+              </Animated.View>
+            </Animated.View>
           </View>
-          <Button
-            mode="contained"
-            onPress={spinReels}
-            buttonColor={Colors.primary}
-            textColor={Colors.yellow}
-            disabled={spinning}
-            style={{ marginTop: 20 }}
-          >
-            {spinning ? "Spinning..." : "Spin"}
-          </Button>
         </Card.Content>
       </Card>
+
+      {/* (Removed the old Shuffle Cards button that was here) */}
 
       <PaperModal
         visible={modalVisible}
@@ -306,7 +389,6 @@ export default function HomeScreen({ navigation }) {
               onPress={() => {
                 setModalVisible(false);
                 const { title } = selectedProject;
-
                 if (title === "Portfolio Website") {
                   navigation.navigate("ProjectDetailsPortfolioWebsite");
                 } else if (title === "Expense Tracker") {
@@ -358,10 +440,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  bannerTextContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  bannerTextContainer: { justifyContent: "center", alignItems: "center" },
   iconImage: {
     width: 50,
     height: 50,
@@ -380,22 +459,30 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     textAlign: "center",
   },
-  cardGrid: {
-    marginBottom: 20,
+  tapHint: {
+    alignItems: "center",
+    marginBottom: 8,
   },
+  tapHintText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.yellow,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+
+  cardGrid: { marginBottom: 20 },
   cardRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
     marginBottom: 20,
   },
-  cardWrapper: {
-    width: 120,
-    alignItems: "center",
-  },
-  flipCard: {
-    width: 120,
-    height: 160,
-  },
+  cardWrapper: { width: 120, alignItems: "center" },
+  flipCard: { width: 120, height: 160 },
   projectCard: {
     width: 120,
     height: 160,
@@ -417,24 +504,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
   },
-  cardBackImage: {
-    width: 60,
-    height: 60,
-    tintColor: Colors.lightGray,
-  },
+  cardBackImage: { width: 60, height: 60, tintColor: Colors.lightGray },
   modalTitle: {
     fontSize: 40,
     fontWeight: "bold",
     marginBottom: 10,
     color: Colors.primary,
   },
-  modalDescription: {
-    fontSize: 20,
-    color: Colors.black,
-  },
+  modalDescription: { fontSize: 20, color: Colors.black },
+
   skillCard: {
     marginHorizontal: 20,
-    marginTop: 40,
+    marginTop: 20,
     paddingBottom: 20,
     backgroundColor: Colors.cardBackground,
     borderColor: Colors.yellow,
@@ -443,6 +524,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
   },
+
+  // Slot machine layout row (reels + lever)
+  slotRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+  },
+
   reelGrid: {
     marginTop: 12,
     marginBottom: 12,
@@ -482,8 +572,51 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
     overflow: "hidden",
   },
-  closeButton: {
-    marginTop: 20,
-    alignSelf: "center",
+
+  // Lever styles
+  leverContainer: {
+    width: 70,
+    height: 220,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    position: "relative",
+    paddingTop: 6,
   },
+  leverTrack: {
+    position: "absolute",
+    top: 16,
+    bottom: 16,
+    width: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.yellow,
+  },
+  leverHandle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    borderWidth: 2,
+    borderColor: Colors.yellow,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: Colors.yellow,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  leverKnob: {
+    width: 24,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.yellow,
+    marginBottom: 4,
+  },
+  leverLabel: {
+    fontSize: 10,
+    color: Colors.yellow,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+
+  closeButton: { marginTop: 20, alignSelf: "center" },
 });
