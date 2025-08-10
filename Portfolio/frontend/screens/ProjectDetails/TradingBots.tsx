@@ -1,7 +1,14 @@
 // screens/ProjectDetails/TradingBots.tsx
-import React from "react";
-import { View, StyleSheet, ScrollView, Image, Pressable } from "react-native";
-import { Text, Button } from "react-native-paper";
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+  Dimensions,
+} from "react-native";
+import { Text, Button, Portal, Modal } from "react-native-paper";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Colors } from "../../styles/Colors";
 
@@ -11,6 +18,12 @@ const forexBotImage = require("../../../assets/UsedImages/ForexBot.png");
 const stockBotImage = require("../../../assets/UsedImages/StockBot.png");
 
 export default function TradingBots({ navigation }) {
+  const [modal, setModal] = useState<{
+    visible: boolean;
+    title?: string;
+    source?: any;
+  }>({ visible: false });
+
   const title = "Trading Bots";
   const description = `
 A collection of my automated trading bots built for different markets and strategies. Each bot is designed to operate independently, with unique technical approaches and risk management rules based on the instrument it trades.
@@ -22,80 +35,158 @@ A collection of my automated trading bots built for different markets and strate
 • sBot (Penny Stocks): Specializes in microcap equities using order book analysis and liquidity tracking to capture short-term moves. Employs a hybrid strategy combining volume imbalances and price action signals.
 `;
 
+  const openImage = (imgSource: any, imgTitle: string) =>
+    setModal({ visible: true, source: imgSource, title: imgTitle });
+  const closeImage = () => setModal({ visible: false });
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.heading}>{title}</Text>
+        <Text style={styles.description}>{description}</Text>
 
-      <View style={styles.botGrid}>
-        {/* cBot */}
-        <View style={styles.botCard}>
-          <Image
-            source={cryptoBotImage}
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Button
-            mode="contained"
-            buttonColor={Colors.primary}
-            textColor={Colors.white}
-            style={styles.detailsButton}
-            onPress={() => navigation.navigate("CryptoBotDetails")}
-          >
-            See More Details
-          </Button>
+        <View style={styles.botGrid}>
+          {/* cBot */}
+          <View style={styles.botCard}>
+            <Pressable
+              onPress={() => openImage(cryptoBotImage, "cBot (Crypto)")}
+              style={styles.imagePressable}
+            >
+              <Image
+                source={cryptoBotImage}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </Pressable>
+            <Button
+              mode="contained"
+              buttonColor={Colors.primary}
+              textColor={Colors.white}
+              style={styles.detailsButton}
+              onPress={() => navigation.navigate("CryptoBotDetails")}
+            >
+              See More Details
+            </Button>
+          </View>
+
+          {/* fBot */}
+          <View style={styles.botCard}>
+            <Pressable
+              onPress={() => openImage(forexBotImage, "fBot (Forex)")}
+              style={styles.imagePressable}
+            >
+              <Image
+                source={forexBotImage}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </Pressable>
+            <Button
+              mode="contained"
+              buttonColor={Colors.primary}
+              textColor={Colors.white}
+              style={styles.detailsButton}
+              onPress={() => navigation.navigate("ForexBotDetails")}
+            >
+              See More Details
+            </Button>
+          </View>
+
+          {/* sBot */}
+          <View style={styles.botCard}>
+            <Pressable
+              onPress={() => openImage(stockBotImage, "sBot (Penny Stocks)")}
+              style={styles.imagePressable}
+            >
+              <Image
+                source={stockBotImage}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </Pressable>
+            <Button
+              mode="contained"
+              buttonColor={Colors.primary}
+              textColor={Colors.white}
+              style={styles.detailsButton}
+              onPress={() => navigation.navigate("StockBotDetails")}
+            >
+              See More Details
+            </Button>
+          </View>
         </View>
 
-        {/* fBot */}
-        <View style={styles.botCard}>
-          <Image
-            source={forexBotImage}
-            style={styles.image}
-            resizeMode="contain"
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backIconContainer}
+        >
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={24}
+            color={Colors.primary}
           />
-          <Button
-            mode="contained"
-            buttonColor={Colors.primary}
-            textColor={Colors.white}
-            style={styles.detailsButton}
-            onPress={() => navigation.navigate("ForexBotDetails")}
-          >
-            See More Details
-          </Button>
-        </View>
+        </Pressable>
+      </ScrollView>
 
-        {/* sBot */}
-        <View style={styles.botCard}>
-          <Image
-            source={stockBotImage}
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Button
-            mode="contained"
-            buttonColor={Colors.primary}
-            textColor={Colors.white}
-            style={styles.detailsButton}
-            onPress={() => navigation.navigate("StockBotDetails")}
-          >
-            See More Details
-          </Button>
-        </View>
-      </View>
-
-      <Pressable
-        onPress={() => navigation.goBack()}
-        style={styles.backIconContainer}
+      {/* Shared modal for enlarged images */}
+      <PaperModal
+        visible={modal.visible}
+        onDismiss={closeImage}
+        title={modal.title || "Preview"}
       >
-        <MaterialCommunityIcons
-          name="arrow-left"
-          size={24}
-          color={Colors.primary}
-        />
-      </Pressable>
-    </ScrollView>
+        {modal.source ? (
+          <Image
+            source={modal.source}
+            resizeMode="contain"
+            style={styles.modalImage}
+          />
+        ) : null}
+      </PaperModal>
+    </>
   );
 }
+
+/** Inline PaperModal component (single-file usage) */
+function PaperModal({
+  visible,
+  onDismiss,
+  title,
+  children,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+  title?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onDismiss}
+        contentContainerStyle={styles.modalContainer}
+      >
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <Pressable
+            onPress={onDismiss}
+            style={styles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <MaterialCommunityIcons
+              name="close"
+              size={22}
+              color={Colors.primary}
+            />
+          </Pressable>
+        </View>
+        <View style={styles.modalBody}>{children}</View>
+      </Modal>
+    </Portal>
+  );
+}
+
+const { width, height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   container: {
@@ -118,26 +209,39 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+
   botGrid: {
     flexDirection: "row",
     justifyContent: "space-evenly",
     width: "100%",
     marginTop: 10,
+    flexWrap: "wrap",
+    gap: 12,
   },
   botCard: {
     alignItems: "center",
-    width: 200, // Larger card size
+    width: 200,
   },
-  image: {
+
+  // Pressable image frame to match your other screens
+  imagePressable: {
     width: 200,
     height: 200,
     borderRadius: 10,
+    overflow: "hidden",
     marginBottom: 8,
+    backgroundColor: Colors.secondary,
   },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+
   detailsButton: {
-    width: 200, // Match image width
+    width: 200,
     borderRadius: 6,
   },
+
   backIconContainer: {
     position: "absolute",
     top: 20,
@@ -150,5 +254,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+
+  // Modal styles (consistent with your pattern)
+  modalContainer: {
+    width: Math.min(width - 24, 720),
+    alignSelf: "center",
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 12,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.black,
+    textAlign: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    right: 4,
+    top: 4,
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: Colors.secondary,
+  },
+  modalBody: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    paddingBottom: 8,
+  },
+  modalImage: {
+    width: "100%",
+    height: Math.min(height * 0.7, 700),
+    borderRadius: 12,
   },
 });
