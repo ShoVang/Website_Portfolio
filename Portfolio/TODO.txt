@@ -1,9 +1,10 @@
 
 Add slots machine to show skills if 3 match shows jackpot with animation ,
- make skill machine smaller , takes up whols screen
- show jack pot animation and make it it a bar to pull down
-
-Make it more obvouis to click on the cards and
+ show jack pot animation 
  
 add custom font on banner , add roll dice animation ?
     fix the font stuff
+
+Inside of port fiol website explaine the stuff i did to buidl this website 
+
+Insid the about me add all the skills and how I am a full stack dev but mainly focous on the front end. 
