@@ -15,4 +15,9 @@ export const TYPOGRAPHY = {
     medium: 22,
     large: 28,
   },
-};
+  fontFamily: {
+    arcade: "PressStart2P", // Big arcade-style headings
+    modern: "Orbitron", // Regular readable text
+    modernBold: "OrbitronBold", // Emphasis/bold text
+  },
+} as const;

@@ -9,12 +9,15 @@ import {
   Animated,
   Easing,
   PanResponder,
+  ActivityIndicator,
 } from "react-native";
+import { useFonts } from "expo-font";
 import { Text, Card, Button } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
 
 import PaperModal from "../components/PaperModal";
 import { Colors } from "../styles/Colors";
+import { TYPOGRAPHY } from "../styles/TYPOGRAPHY";
 import useScreenDimensions from "../hooks/useScreenDimensions";
 
 const icons = {
@@ -47,29 +50,161 @@ const originalProjects = [
 const SLOT_HEIGHT = 60;
 const VISIBLE_ROWS = 3;
 const slotsToScroll = 5;
-
-// Match your card sizes from styles
 const CARD_W = 120;
 const CARD_H = 160;
 
 export default function HomeScreen({ navigation }) {
   const { height: screenHeight, width: screenWidth } = useScreenDimensions();
 
-  const [flippedCards, setFlippedCards] = useState([]);
-  const [shuffledProjects, setShuffledProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [shuffleKey, setShuffleKey] = useState(0); // only used for the initial shuffle if you like
+  // Load your custom fonts with error handling
+  // On web, we'll use a more lenient approach since expo-font can be problematic
+  const [fontsLoaded, fontError] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
 
-  // only bounce once on initial mount
-  const [didMount, setDidMount] = useState(false);
+  // For web, we'll consider fonts "loaded" after a short delay to prevent blocking
+  const [webFontsReady, setWebFontsReady] = useState(false);
   useEffect(() => {
-    setDidMount(true);
+    if (Platform.OS === "web") {
+      // Try to load fonts via CSS on web as a fallback
+      try {
+        const style = document.createElement("style");
+        style.textContent = `
+          @font-face {
+            font-family: 'PressStart2P';
+            src: url('${require("../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf")}') format('truetype');
+          }
+          @font-face {
+            font-family: 'Orbitron';
+            src: url('${require("../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf")}') format('truetype');
+          }
+          @font-face {
+            font-family: 'Orbitron-Bold';
+            src: url('${require("../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf")}') format('truetype');
+          }
+        `;
+        document.head.appendChild(style);
+        console.log("Web: CSS font loading attempted");
+      } catch (error) {
+        console.warn("Web: CSS font loading failed:", error);
+      }
+
+      const timer = setTimeout(() => {
+        setWebFontsReady(true);
+      }, 1000); // Give fonts 1 second to load on web
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  // Debug font loading
+  useEffect(() => {
+    if (fontError) {
+      console.warn("Font loading error:", fontError);
+    }
+    if (fontsLoaded) {
+      console.log("Fonts loaded successfully");
+    }
+    console.log("Font loading state:", { fontsLoaded, fontError });
+  }, [fontsLoaded, fontError]);
+
+  // If fonts fail to load, use system fonts as fallback
+  const fontFamily = {
+    arcade: fontsLoaded
+      ? TYPOGRAPHY.fontFamily.arcade
+      : Platform.OS === "ios"
+      ? "Courier"
+      : Platform.OS === "web"
+      ? "monospace"
+      : "monospace",
+    modern: fontsLoaded
+      ? TYPOGRAPHY.fontFamily.modern
+      : Platform.OS === "ios"
+      ? "Arial"
+      : Platform.OS === "web"
+      ? "sans-serif"
+      : "sans-serif",
+    modernBold: fontsLoaded
+      ? TYPOGRAPHY.fontFamily.modernBold
+      : Platform.OS === "ios"
+      ? "Arial-Bold"
+      : Platform.OS === "web"
+      ? "sans-serif"
+      : "sans-serif-medium",
+  };
+
+  // For web platform, always render the component even if fonts aren't loaded
+  // Web fonts can take longer to load and we don't want to block rendering
+  if (Platform.OS === "web") {
+    // On web, just continue with fallback fonts if custom fonts aren't loaded yet
+    console.log(
+      "Web platform detected - rendering with fallback fonts if needed"
+    );
+    // On web, we'll consider fonts ready after the timeout or when they actually load
+    if (!webFontsReady && !fontsLoaded) {
+      console.log("Web: Waiting for fonts to be ready...");
+    }
+    // On web, always continue rendering - don't block for fonts
+  } else {
+    // On mobile, show loading indicator while fonts are loading
+    if (!fontsLoaded && !fontError) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.yellow} />
+          <Text
+            style={[styles.loadingText, { fontFamily: fontFamily.modernBold }]}
+          >
+            Loading...
+          </Text>
+        </View>
+      );
+    }
+
+    // Show error state if fonts fail to load
+    if (fontError) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text
+            style={[
+              styles.loadingText,
+              { fontFamily: fontFamily.modernBold, color: Colors.primary },
+            ]}
+          >
+            Font loading failed. Using system fonts.
+          </Text>
+          <Text
+            style={[
+              styles.loadingText,
+              { fontFamily: fontFamily.modern, fontSize: 14, marginTop: 10 },
+            ]}
+          >
+            The app will continue with limited styling.
+          </Text>
+        </View>
+      );
+    }
+  }
+
+  const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
+  const [shuffledProjects, setShuffledProjects] = useState<
+    typeof originalProjects
+  >([]);
+  const [selectedProject, setSelectedProject] = useState<
+    (typeof originalProjects)[number] | null
+  >(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [shuffleKey, setShuffleKey] = useState(0);
+
+  const [didMount, setDidMount] = useState(false);
+  useEffect(() => setDidMount(true), []);
 
   // ====== MEASUREMENT for true center gather ======
   const [gridWidth, setGridWidth] = useState(0);
-  const rowYsRef = useRef([0, 0]); // y of each row inside cardGrid
+  const rowYsRef = useRef<number[]>([0, 0]);
   const onRowLayout = (rowIdx: number) => (e: any) => {
     rowYsRef.current[rowIdx] = e.nativeEvent.layout.y;
   };
@@ -81,7 +216,6 @@ export default function HomeScreen({ navigation }) {
   ).current;
   const [isShuffling, setIsShuffling] = useState(false);
 
-  // per-card deltas to the grid center
   const [gatherOffsets, setGatherOffsets] = useState(
     Array.from({ length: 6 }, () => ({ dx: 0, dy: 0 }))
   );
@@ -96,7 +230,7 @@ export default function HomeScreen({ navigation }) {
     const rot = v.interpolate({
       inputRange: [0, 1],
       outputRange: ["0deg", "2deg"],
-    }); // subtle
+    });
 
     return {
       transform: [
@@ -108,9 +242,7 @@ export default function HomeScreen({ navigation }) {
     };
   };
 
-  // Compute dx/dy for each card to the grid center
   const computeGatherOffsets = () => {
-    // If we haven’t measured yet, fall back to a reasonable approximation
     if (!gridWidth || rowYsRef.current[1] === undefined) {
       const approx = Array.from({ length: 6 }, (_, i) => {
         const row = Math.floor(i / 3);
@@ -123,13 +255,12 @@ export default function HomeScreen({ navigation }) {
       return;
     }
 
-    const gapX = Math.max(0, (gridWidth - 3 * CARD_W) / 4); // space-evenly gap approximation
-    const colCenterX = (col: number) => gapX * (col + 1) + CARD_W * (col + 0.5); // gap + card centers
+    const gapX = Math.max(0, (gridWidth - 3 * CARD_W) / 4);
+    const colCenterX = (col: number) => gapX * (col + 1) + CARD_W * (col + 0.5);
     const targetCenterX = gridWidth / 2;
 
-    const rowY = rowYsRef.current; // top Y of each row inside cardGrid
-    const rowCenterY = (row: number) => rowY[row] + CARD_H / 2;
-    const targetCenterY = (rowCenterY(0) + rowCenterY(1)) / 2; // halfway between the two row centers
+    const rowCenterY = (row: number) => rowYsRef.current[row] + CARD_H / 2;
+    const targetCenterY = (rowCenterY(0) + rowCenterY(1)) / 2;
 
     const offsets = Array.from({ length: 6 }, (_, i) => {
       const row = Math.floor(i / 3);
@@ -142,14 +273,21 @@ export default function HomeScreen({ navigation }) {
     setGatherOffsets(offsets);
   };
 
+  const shuffleArray = <T,>(arr: T[]) => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
   const shuffleWithAnimation = () => {
     if (isShuffling) return;
     setIsShuffling(true);
 
-    // compute where to gather BEFORE starting
     computeGatherOffsets();
 
-    // Phase 1: gather to grid center
     Animated.stagger(
       50,
       cardAnims.map((v) =>
@@ -161,14 +299,11 @@ export default function HomeScreen({ navigation }) {
         })
       )
     ).start(() => {
-      // Shuffle data while gathered
       const newOrder = shuffleArray(originalProjects);
       setShuffledProjects(newOrder);
       setFlippedCards(Array(newOrder.length).fill(false));
       setSelectedProject(null);
-      // DO NOT bump a key here (keep views mounted)
 
-      // Phase 2: scatter back with randomized order for organic feel
       Animated.stagger(
         60,
         cardAnims
@@ -199,7 +334,7 @@ export default function HomeScreen({ navigation }) {
     "Cloud Services",
   ];
 
-  const [reelGrid, setReelGrid] = useState([
+  const [reelGrid, setReelGrid] = useState<string[][]>([
     ["Automation", "Cloud Computing", "UI/UX Design"],
     ["Website Building", "Database Design", "DevOps"],
     ["App Development", "AI Integration", "Cybersecurity"],
@@ -222,7 +357,7 @@ export default function HomeScreen({ navigation }) {
     return stack.slice(0, totalSlots);
   };
 
-  const [rollingStacks, setRollingStacks] = useState([
+  const [rollingStacks, setRollingStacks] = useState<string[][]>([
     getLoopedSkillStack(),
     getLoopedSkillStack(),
     getLoopedSkillStack(),
@@ -327,42 +462,41 @@ export default function HomeScreen({ navigation }) {
     setModalVisible(true);
   };
 
-  const shuffleArray = (arr: any[]) => {
-    const copy = [...arr];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  };
-
   const shuffleCards = () => {
     const newOrder = shuffleArray(originalProjects);
     setShuffledProjects(newOrder);
     setFlippedCards(Array(newOrder.length).fill(false));
     setSelectedProject(null);
     setModalVisible(false);
-    setShuffleKey((prev) => prev + 1); // optional for initial mount only
+    setShuffleKey((prev) => prev + 1);
   };
 
   return (
-    // Disable ScrollView scrolling while the lever is being dragged
     <ScrollView style={styles.container} scrollEnabled={!dragging}>
       <View style={styles.banner}>
         <View style={styles.bannerContent}>
           <Image source={icons.chip} style={styles.iconImage} />
           <View style={styles.bannerTextContainer}>
-            <Text style={styles.neonText}>ROLL THE DICE</Text>
-            <Text style={styles.neonText}>HIRE ME</Text>
+            <Text style={[styles.neonText, { fontFamily: fontFamily.arcade }]}>
+              ROLL THE DICE
+            </Text>
+
+            <Text style={[styles.neonText, { fontFamily: fontFamily.arcade }]}>
+              HIRE ME
+            </Text>
           </View>
           <Image source={icons.dice} style={styles.iconImage} />
         </View>
       </View>
+
       <View style={styles.tapHint}>
-        <Text style={styles.tapHintText}>Tap a card to reveal</Text>
+        <Text
+          style={[styles.tapHintText, { fontFamily: fontFamily.modernBold }]}
+        >
+          Tap a card to reveal
+        </Text>
       </View>
 
-      {/* Measure grid width here */}
       <View
         style={styles.cardGrid}
         onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
@@ -375,7 +509,7 @@ export default function HomeScreen({ navigation }) {
                 const globalIndex = row * 3 + index;
                 return (
                   <Pressable
-                    key={globalIndex} // stable: do NOT include shuffleKey here
+                    key={globalIndex}
                     onPress={
                       !isShuffling
                         ? () => handleCardPress(globalIndex)
@@ -383,11 +517,9 @@ export default function HomeScreen({ navigation }) {
                     }
                     style={styles.cardWrapper}
                   >
-                    {/* Animated wrapper handles gather/scatter */}
                     <Animated.View
                       style={[styles.flipCard, getCardAnimStyle(globalIndex)]}
                     >
-                      {/* Only bounce on the very first mount */}
                       <Animatable.View
                         animation={!didMount ? "bounceIn" : undefined}
                         delay={!didMount ? globalIndex * 100 : 0}
@@ -396,7 +528,12 @@ export default function HomeScreen({ navigation }) {
                         {flippedCards[globalIndex] ? (
                           <Card style={styles.projectCard}>
                             <Card.Content>
-                              <Text style={styles.projectTitle}>
+                              <Text
+                                style={[
+                                  styles.projectTitle,
+                                  { fontFamily: fontFamily.modernBold },
+                                ]}
+                              >
                                 {project.title}
                               </Text>
                             </Card.Content>
@@ -418,23 +555,25 @@ export default function HomeScreen({ navigation }) {
         ))}
       </View>
 
-      {/* Shuffle button (animated shuffle) */}
       <Button
         mode="contained"
         buttonColor={Colors.primary}
         textColor={Colors.yellow}
         onPress={shuffleWithAnimation}
         disabled={isShuffling}
+        labelStyle={{ fontFamily: fontFamily.modernBold }}
         style={{ marginTop: 10, marginBottom: 10, alignSelf: "center" }}
       >
         {isShuffling ? "Shuffling..." : "Shuffle Cards"}
       </Button>
 
       <Card mode="outlined" style={styles.skillCard}>
-        <Card.Title title="Skills Slot Machine" titleStyle={styles.neonText} />
+        <Card.Title
+          title="Skills Slot Machine"
+          titleStyle={[styles.neonText, { fontFamily: fontFamily.arcade }]}
+        />
         <Card.Content>
           <View style={styles.slotRow}>
-            {/* Reels */}
             <View style={styles.reelGrid}>
               {[0, 1, 2].map((colIdx) => (
                 <View key={colIdx} style={styles.reelColumn}>
@@ -454,7 +593,7 @@ export default function HomeScreen({ navigation }) {
                     >
                       {rollingStacks[colIdx].map((skill, rowIdx) => (
                         <View
-                          key={skill + rowIdx + spinning}
+                          key={skill + rowIdx + String(spinning)}
                           style={styles.reelTextWrapper}
                         >
                           <Text style={styles.reelText}>{skill}</Text>
@@ -466,7 +605,6 @@ export default function HomeScreen({ navigation }) {
               ))}
             </View>
 
-            {/* Lever — attach panHandlers to the whole container */}
             <Animated.View
               style={styles.leverContainer}
               {...panResponder.panHandlers}
@@ -509,8 +647,17 @@ export default function HomeScreen({ navigation }) {
       >
         {selectedProject && (
           <>
-            <Text style={styles.modalTitle}>{selectedProject.title}</Text>
-            <Text style={styles.modalDescription}>
+            <Text
+              style={[styles.modalTitle, { fontFamily: fontFamily.arcade }]}
+            >
+              {selectedProject.title}
+            </Text>
+            <Text
+              style={[
+                styles.modalDescription,
+                { fontFamily: fontFamily.modern },
+              ]}
+            >
               {selectedProject.description}
             </Text>
             <Button
@@ -521,6 +668,7 @@ export default function HomeScreen({ navigation }) {
                 { marginTop: 12 },
               ]}
               textColor={Colors.black}
+              labelStyle={{ fontFamily: fontFamily.modernBold }}
               onPress={() => {
                 setModalVisible(false);
                 const { title } = selectedProject;
@@ -547,7 +695,10 @@ export default function HomeScreen({ navigation }) {
               mode="contained"
               onPress={() => setModalVisible(false)}
               style={[styles.closeButton, { backgroundColor: Colors.primary }]}
-              labelStyle={{ color: Colors.white }}
+              labelStyle={{
+                color: Colors.white,
+                fontFamily: fontFamily.modernBold,
+              }}
             >
               Close
             </Button>
@@ -585,19 +736,18 @@ const styles = StyleSheet.create({
   },
   neonText: {
     color: Colors.yellow,
-    fontWeight: "bold",
     fontSize: 28,
     textShadowColor: Colors.neonBlue,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
     letterSpacing: 2,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade, // Press Start 2P
     textAlign: "center",
   },
   tapHint: { alignItems: "center", marginBottom: 8 },
   tapHintText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // Orbitron Bold
     color: Colors.yellow,
     backgroundColor: Colors.primary,
     paddingHorizontal: 12,
@@ -624,7 +774,7 @@ const styles = StyleSheet.create({
   },
   projectTitle: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // Orbitron Bold
     textAlign: "center",
     color: Colors.white,
   },
@@ -637,13 +787,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cardBackImage: { width: 60, height: 60, tintColor: Colors.lightGray },
+
   modalTitle: {
     fontSize: 40,
-    fontWeight: "bold",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade, // Press Start 2P
     marginBottom: 10,
     color: Colors.primary,
   },
-  modalDescription: { fontSize: 20, color: Colors.black },
+  modalDescription: {
+    fontSize: 20,
+    fontFamily: TYPOGRAPHY.fontFamily.modern, // Orbitron Regular
+    color: Colors.black,
+  },
 
   skillCard: {
     marginHorizontal: 20,
@@ -691,7 +846,7 @@ const styles = StyleSheet.create({
   },
   reelText: {
     fontSize: 20,
-    fontWeight: "600",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // Orbitron Bold
     color: Colors.yellow,
     backgroundColor: Colors.primary,
     borderRadius: 8,
@@ -745,10 +900,27 @@ const styles = StyleSheet.create({
   },
   leverLabel: {
     fontSize: 10,
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // Orbitron Bold
     color: Colors.yellow,
-    fontWeight: "700",
     letterSpacing: 1,
   },
 
   closeButton: { marginTop: 20, alignSelf: "center" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.secondary,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: Colors.yellow,
+  },
+  debugInfo: {
+    backgroundColor: Colors.black,
+    padding: 10,
+    margin: 10,
+    borderRadius: 5,
+  },
 });
