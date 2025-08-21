@@ -4,6 +4,7 @@ Add slots machine to show skills if 3 match shows jackpot with animation ,
  
 add custom font on banner , add roll dice animation ?
     fix the font stuff
+    start with main pages. 
 
 Inside of port fiol website explaine the stuff i did to buidl this website 
 
