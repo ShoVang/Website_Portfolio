@@ -9,3 +9,5 @@ add custom font on banner , add roll dice animation ?
 Inside of port fiol website explaine the stuff i did to buidl this website 
 
 Insid the about me add all the skills and how I am a full stack dev but mainly focous on the front end. 
+
+make code look better and inside make people come see the actual code.

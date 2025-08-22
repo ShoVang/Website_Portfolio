@@ -1,11 +1,25 @@
 import React from "react";
-import { ScrollView, View, StyleSheet, Platform } from "react-native";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { useFonts } from "expo-font";
+
 import { Text } from "react-native-paper";
 import { Colors } from "../styles/Colors";
+import { TYPOGRAPHY } from "../styles/TYPOGRAPHY";
 import useScreenDimensions from "../hooks/useScreenDimensions";
 
 export default function AboutScreen() {
   const { height, width, isLandscape } = useScreenDimensions();
+
+  const [fontsLoaded, fontError] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null; // wait until fonts are loaded
 
   return (
     <View style={styles.screen}>
@@ -44,7 +58,7 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.secondary, // now fills whole screen
+    backgroundColor: Colors.secondary,
   },
   container: {
     paddingHorizontal: 20,
@@ -69,20 +83,23 @@ const styles = StyleSheet.create({
   },
   neonText: {
     color: Colors.yellow,
-    fontWeight: "bold",
     fontSize: 28,
     textShadowColor: Colors.neonBlue,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
     letterSpacing: 2,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade, // arcade font for heading
     textAlign: "center",
   },
   description: {
-    fontSize: 16,
-    color: Colors.black,
-    lineHeight: 24,
+    fontSize: 18,
+    color: "#222222ff", // lighter text for dark bg // f5f5f5
+    lineHeight: 28,
     marginBottom: 20,
     textAlign: "left",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // bolder Orbitron
+    backgroundColor: "rgba(102, 97, 97, 0.3)", // subtle overlay for readability
+    padding: 10,
+    borderRadius: 8,
   },
 });

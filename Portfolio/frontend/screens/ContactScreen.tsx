@@ -8,7 +8,10 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { Text, Button, Portal, Modal } from "react-native-paper";
+import { useFonts } from "expo-font";
+
 import { Colors } from "../styles/Colors";
+import { TYPOGRAPHY } from "../styles/TYPOGRAPHY";
 import emailjs from "@emailjs/browser";
 
 export default function ContactScreen() {
@@ -19,6 +22,17 @@ export default function ContactScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+
+  const [fontsLoaded] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
 
   const handleSubmit = () => {
     if (!name || !email || !message) {
@@ -62,11 +76,7 @@ export default function ContactScreen() {
     <ScrollView style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={80}>
         <View style={styles.banner}>
-          <View style={styles.bannerContent}>
-            <View style={styles.bannerTextContainer}>
-              <Text style={styles.neonText}>Get in Touch</Text>
-            </View>
-          </View>
+          <Text style={styles.bannerText}>GET IN TOUCH</Text>
         </View>
 
         <Text style={styles.introText}>
@@ -106,6 +116,7 @@ export default function ContactScreen() {
           textColor={Colors.yellow}
           onPress={handleSubmit}
           style={styles.submitButton}
+          labelStyle={{ fontFamily: TYPOGRAPHY.fontFamily.modernBold }}
           disabled={loading}
         >
           {loading ? "Sending..." : "Send Message"}
@@ -124,6 +135,7 @@ export default function ContactScreen() {
             mode="contained"
             onPress={() => setModalVisible(false)}
             style={styles.modalButton}
+            labelStyle={{ fontFamily: TYPOGRAPHY.fontFamily.modernBold }}
           >
             OK
           </Button>
@@ -141,35 +153,26 @@ const styles = StyleSheet.create({
   },
   banner: {
     backgroundColor: Colors.primary,
-    paddingVertical: 20,
+    paddingVertical: 25,
     marginBottom: 20,
-    width: "100%",
-  },
-  bannerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bannerTextContainer: {
-    justifyContent: "center",
     alignItems: "center",
   },
-  neonText: {
+  bannerText: {
     color: Colors.yellow,
-    fontWeight: "bold",
-    fontSize: 28,
+    fontSize: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.arcade,
     textShadowColor: Colors.neonBlue,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadowRadius: 10,
     letterSpacing: 2,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-    textAlign: "center",
   },
   introText: {
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 20,
+    lineHeight: 24,
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.modern,
   },
   input: {
     backgroundColor: Colors.cardBackground,
@@ -181,6 +184,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 16,
+    fontFamily: TYPOGRAPHY.fontFamily.modern,
   },
   textArea: {
     height: 120,
@@ -189,6 +193,7 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 10,
     alignSelf: "center",
+    borderRadius: 8,
   },
   modalContainer: {
     backgroundColor: Colors.cardBackground,
@@ -201,6 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
   },
   modalButton: {
     alignSelf: "center",
