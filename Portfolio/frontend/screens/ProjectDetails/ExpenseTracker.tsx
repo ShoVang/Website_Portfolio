@@ -11,7 +11,10 @@ import {
 } from "react-native";
 import { Text, Button, Portal, Modal } from "react-native-paper";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useFonts } from "expo-font";
+
 import { Colors } from "../../styles/Colors";
+import { TYPOGRAPHY } from "../../styles/TYPOGRAPHY";
 
 const balanceImage = require("../../../assets/UsedImages/Balance.png");
 
@@ -21,6 +24,17 @@ export default function ExpenseTracker({ navigation }) {
   const title = "Balance Tracker";
   const description =
     "I developed a user-friendly website that allows users to easily track their expenses by uploading an Excel file. The system generates a graph that visualizes the fluctuations in their account balances over time. Additionally, I provided users with a template they can download, offering a seamless and efficient way to manage their financial data.";
+
+  const [fontsLoaded] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
 
   const openLink = () => {
     Linking.openURL("https://balance-tracker-d0e1b.web.app/");
@@ -32,7 +46,6 @@ export default function ExpenseTracker({ navigation }) {
         <Text style={styles.heading}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
 
-        {/* Pressable image (matches your CITSTicketSystem look/feel) */}
         <Pressable
           onPress={() => setImageOpen(true)}
           style={styles.imagePressable}
@@ -41,8 +54,6 @@ export default function ExpenseTracker({ navigation }) {
             source={balanceImage}
             style={styles.image}
             resizeMode="contain"
-            onError={(error) => console.log("Image error:", error.nativeEvent)}
-            onLoad={() => console.log("Image loaded successfully")}
           />
         </Pressable>
 
@@ -50,7 +61,10 @@ export default function ExpenseTracker({ navigation }) {
           mode="contained"
           onPress={openLink}
           style={styles.button}
-          labelStyle={{ color: Colors.white }}
+          labelStyle={{
+            color: Colors.white,
+            fontFamily: TYPOGRAPHY.fontFamily.modernBold,
+          }}
         >
           Visit Balance Tracker Website
         </Button>
@@ -67,7 +81,6 @@ export default function ExpenseTracker({ navigation }) {
         </Pressable>
       </ScrollView>
 
-      {/* Pop-out modal for enlarged image */}
       <PaperModal
         visible={imageOpen}
         onDismiss={() => setImageOpen(false)}
@@ -83,18 +96,7 @@ export default function ExpenseTracker({ navigation }) {
   );
 }
 
-/** Inline PaperModal component (single-file usage) */
-function PaperModal({
-  visible,
-  onDismiss,
-  title,
-  children,
-}: {
-  visible: boolean;
-  onDismiss: () => void;
-  title?: string;
-  children: React.ReactNode;
-}) {
+function PaperModal({ visible, onDismiss, title, children }) {
   return (
     <Portal>
       <Modal
@@ -104,12 +106,7 @@ function PaperModal({
       >
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>{title}</Text>
-          <Pressable
-            onPress={onDismiss}
-            style={styles.closeButton}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
+          <Pressable onPress={onDismiss} style={styles.closeButton}>
             <MaterialCommunityIcons
               name="close"
               size={22}
@@ -133,41 +130,43 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heading: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 26,
     color: Colors.primary,
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade,
   },
   description: {
-    fontSize: 16,
-    color: Colors.black,
-    lineHeight: 24,
+    fontSize: 18,
+    color: Colors.black, // light text for dark background
+    lineHeight: 28,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: "left",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
+    backgroundColor: "rgba(102, 97, 97, 0.3)", // subtle overlay
+    padding: 12,
+    borderRadius: 8,
+    width: "100%",
   },
-
-  // Match your CITSTicketSystem pressable image layout
   imagePressable: {
-    width: "50%",
+    width: "70%",
     height: 400,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 20,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.cardBackground,
   },
   image: {
     width: "100%",
     height: "100%",
   },
-
   button: {
     backgroundColor: Colors.primary,
     marginTop: 10,
-    width: "30%",
-    borderRadius: 6,
+    width: "70%",
+    borderRadius: 8,
+    alignSelf: "center",
   },
-
   backIconContainer: {
     position: "absolute",
     top: 20,
@@ -181,28 +180,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-
-  // Modal styles (same visual system as your example)
   modalContainer: {
     width: Math.min(width - 24, 720),
     alignSelf: "center",
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.cardBackground,
     borderRadius: 16,
-    padding: 12,
+    padding: 16,
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingTop: 4,
     paddingBottom: 8,
   },
   modalTitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.black,
+    fontSize: 20,
+    color: Colors.yellow,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
   },
   closeButton: {
     position: "absolute",
