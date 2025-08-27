@@ -1,71 +1,50 @@
-📱 React Native App Template (TypeScript + Express Backend)
-A full-stack mobile app starter kit :
+# 🌐 Portfolio Website
 
-Frontend: React Native (TypeScript), React Navigation, reusable components, and clean architecture.
-Backend: Node.js + Express (TypeScript), pre-configured for database and real-time integrations.
+This is my personal portfolio website built with **React Native (Expo Web)** and deployed on **Firebase Hosting**.  
+It showcases my projects, skills, and professional experience, with a clean and responsive design.
 
-📂 Project Structure
-AppTemplate/
-├── frontend/ # React Native mobile app
-│ ├── components/ # Shared UI components (buttons, modals, etc.)
-│ ├── hooks/ # Custom hooks (e.g., useScreenDimensions)
-│ ├── navigation/ # Auth and root navigators
-│ ├── screens/ # Welcome, Login, Signup, Home, etc.
-│ ├── styles/ # Colors, spacing, typography systems
-│ ├── types/ # Navigation and global type definitions
-│ └── App.tsx # App entry point
-│
-├── backend/ # Node.js + Express backend
-│ ├── src/
-│ │ ├── routes/ # API endpoints
-│ │ └── Server.ts # Express server setup
-│ ├── package.json # Backend dependencies & scripts
-│ └── tsconfig.json # TypeScript configuration
-│
-├── TODO.txt # Developer notes and backlog
-├── package.json # Shared root config (optional)
-├── tsconfig.json # Frontend TypeScript config
+---
+
+## 📂 Project Structure
+
+Portfolio/
+├── assets/ # Images, fonts, and icons
+├── components/ # Shared UI components (modals, cards, etc.)
+├── hooks/ # Custom React hooks
+├── navigation/ # Navigation configuration
+├── screens/ # Project detail pages & portfolio sections
+├── styles/ # Colors, typography, global styles
+├── App.tsx # Main entry point
+├── firebase.json # Firebase Hosting configuration
 └── README.md # Project documentation
 
-===========================================================================================================================================
+---
 
-🚀 Getting Started  
-🛠️ Frontend Setup (React Native + Expo)
+## 🛠️ Tech Stack
 
-Navigate to the frontend directory:cd frontend
+- **Frontend:** React Native + Expo (Web support enabled)
+- **UI:** React Native Paper + custom typography & colors
+- **Hosting:** Firebase Hosting
+- **Other:** Responsive layouts, reusable components, animations
 
-Install dependencies:npm install
+---
 
-Start the Expo development server:npm start
+## 🚀 Getting Started (Local Development)
 
-⚙️ Backend Setup (Express + TypeScript)
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/ShoVang/Website_Portfolio.git
+   cd Website_Portfolio
+   ```
 
-Navigate to the backend directory:cd backend
+Install dependencies:
 
-Install dependencies:npm install
+npm install
 
-Run the development server:npm run dev
+Start the Expo development server:
 
-===========================================================================================================================================
+npm start
 
-🧱 Built With
-Frontend:
-React Native – Cross-platform mobile framework
-Expo – Simplified React Native development
-React Navigation – Routing and navigation
+Press w to open the web version in your browser.
 
-Backend:
-Express.js – Fast Node.js web framework
-TypeScript – Typed JavaScript
-Nodemon – Auto-restart for development
-ts-node – TypeScript execution
-
-Other: Modular architecture, reusable components, and responsive design
-
-✅ Core Features
-
-🔐 Authentication Flow: Welcome screen with Login/Signup navigation
-🎨 Reusable Styling: Consistent colors, spacing, and typography system
-📏 Responsive Design: Custom useScreenDimensions hook for adaptive layouts
-🗂 Modular Structure: Organized folders for scalability and maintainability
-🖥 Functional Backend: Express server with sample API routes
+Or scan the QR code with Expo Go on your phone.

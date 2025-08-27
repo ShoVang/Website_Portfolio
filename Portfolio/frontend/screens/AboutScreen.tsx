@@ -1,8 +1,8 @@
 import React from "react";
-import { ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet, Linking } from "react-native";
 import { useFonts } from "expo-font";
+import { Text, Button } from "react-native-paper";
 
-import { Text } from "react-native-paper";
 import { Colors } from "../styles/Colors";
 import { TYPOGRAPHY } from "../styles/TYPOGRAPHY";
 import useScreenDimensions from "../hooks/useScreenDimensions";
@@ -50,6 +50,20 @@ export default function AboutScreen() {
           I also created it to offer affordable services to small businesses,
           hoping to make tech solutions accessible for those looking to grow.
         </Text>
+
+        {/* GitHub Button */}
+        <Button
+          mode="contained"
+          style={styles.githubButton}
+          labelStyle={{
+            fontFamily: TYPOGRAPHY.fontFamily.modernBold,
+            fontSize: 20,
+          }}
+          icon="github"
+          onPress={() => Linking.openURL("https://github.com/ShoVang")}
+        >
+          Visit My GitHub
+        </Button>
       </ScrollView>
     </View>
   );
@@ -88,18 +102,24 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
     letterSpacing: 2,
-    fontFamily: TYPOGRAPHY.fontFamily.arcade, // arcade font for heading
+    fontFamily: TYPOGRAPHY.fontFamily.arcade,
     textAlign: "center",
   },
   description: {
     fontSize: 18,
-    color: "#222222ff", // lighter text for dark bg // f5f5f5
+    color: "#222222ff",
     lineHeight: 28,
     marginBottom: 20,
     textAlign: "left",
-    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // bolder Orbitron
-    backgroundColor: "rgba(102, 97, 97, 0.3)", // subtle overlay for readability
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
+    backgroundColor: "rgba(102, 97, 97, 0.3)",
     padding: 10,
     borderRadius: 8,
+  },
+  githubButton: {
+    marginTop: 10,
+    backgroundColor: Colors.secondary, // GitHub dark gray
+    borderRadius: 8,
+    paddingVertical: 4,
   },
 });
