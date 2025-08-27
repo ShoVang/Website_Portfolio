@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import { Text, Button, Portal, Modal } from "react-native-paper";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Colors } from "../../styles/Colors";
+import { useFonts } from "expo-font";
 
-// Replace these with your actual images for each bot
+import { Colors } from "../../styles/Colors";
+import { TYPOGRAPHY } from "../../styles/TYPOGRAPHY";
+
 const cryptoBotImage = require("../../../assets/UsedImages/CryptoBot.png");
 const forexBotImage = require("../../../assets/UsedImages/ForexBot.png");
 const stockBotImage = require("../../../assets/UsedImages/StockBot.png");
@@ -34,6 +36,17 @@ A collection of my automated trading bots built for different markets and strate
 
 • sBot (Penny Stocks): Specializes in microcap equities using order book analysis and liquidity tracking to capture short-term moves. Employs a hybrid strategy combining volume imbalances and price action signals.
 `;
+
+  const [fontsLoaded] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
 
   const openImage = (imgSource: any, imgTitle: string) =>
     setModal({ visible: true, source: imgSource, title: imgTitle });
@@ -63,6 +76,7 @@ A collection of my automated trading bots built for different markets and strate
               buttonColor={Colors.primary}
               textColor={Colors.white}
               style={styles.detailsButton}
+              labelStyle={{ fontFamily: TYPOGRAPHY.fontFamily.modernBold }}
               onPress={() => navigation.navigate("CryptoBotDetails")}
             >
               See More Details
@@ -86,6 +100,7 @@ A collection of my automated trading bots built for different markets and strate
               buttonColor={Colors.primary}
               textColor={Colors.white}
               style={styles.detailsButton}
+              labelStyle={{ fontFamily: TYPOGRAPHY.fontFamily.modernBold }}
               onPress={() => navigation.navigate("ForexBotDetails")}
             >
               See More Details
@@ -109,6 +124,7 @@ A collection of my automated trading bots built for different markets and strate
               buttonColor={Colors.primary}
               textColor={Colors.white}
               style={styles.detailsButton}
+              labelStyle={{ fontFamily: TYPOGRAPHY.fontFamily.modernBold }}
               onPress={() => navigation.navigate("StockBotDetails")}
             >
               See More Details
@@ -128,7 +144,6 @@ A collection of my automated trading bots built for different markets and strate
         </Pressable>
       </ScrollView>
 
-      {/* Shared modal for enlarged images */}
       <PaperModal
         visible={modal.visible}
         onDismiss={closeImage}
@@ -146,7 +161,6 @@ A collection of my automated trading bots built for different markets and strate
   );
 }
 
-/** Inline PaperModal component (single-file usage) */
 function PaperModal({
   visible,
   onDismiss,
@@ -167,12 +181,7 @@ function PaperModal({
       >
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>{title}</Text>
-          <Pressable
-            onPress={onDismiss}
-            style={styles.closeButton}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
+          <Pressable onPress={onDismiss} style={styles.closeButton}>
             <MaterialCommunityIcons
               name="close"
               size={22}
@@ -196,20 +205,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heading: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 26,
     color: Colors.primary,
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade, // PressStart2P
   },
   description: {
-    fontSize: 16,
-    color: Colors.black,
-    lineHeight: 24,
+    fontSize: 18,
+    color: Colors.black, // ✅ black text
+    lineHeight: 28,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: "left",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // Orbitron Bold
+    backgroundColor: "rgba(102, 97, 97, 0.3)", // ✅ overlay for readability
+    padding: 12,
+    borderRadius: 8,
+    width: "100%",
   },
-
   botGrid: {
     flexDirection: "row",
     justifyContent: "space-evenly",
@@ -222,26 +235,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 200,
   },
-
-  // Pressable image frame to match your other screens
   imagePressable: {
     width: 200,
     height: 200,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 8,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.secondary, // ✅ keep consistent
   },
   image: {
     width: "100%",
     height: "100%",
   },
-
   detailsButton: {
     width: 200,
     borderRadius: 6,
   },
-
   backIconContainer: {
     position: "absolute",
     top: 20,
@@ -255,28 +264,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-
-  // Modal styles (consistent with your pattern)
   modalContainer: {
     width: Math.min(width - 24, 720),
     alignSelf: "center",
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.lightGray,
     borderRadius: 16,
-    padding: 12,
+    padding: 16,
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingTop: 4,
     paddingBottom: 8,
   },
   modalTitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.black,
+    fontSize: 20,
+    color: Colors.primary,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // ✅ Orbitron Bold
   },
   closeButton: {
     position: "absolute",

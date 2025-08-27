@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import { Text, Portal, Modal } from "react-native-paper";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Colors } from "../../styles/Colors";
+import { useFonts } from "expo-font";
 
-// Replace with actual CITS Ticket System image if available
+import { Colors } from "../../styles/Colors";
+import { TYPOGRAPHY } from "../../styles/TYPOGRAPHY";
+
 const citsImage = require("../../../assets/UsedImages/CITS.png");
 
 export default function CITSTicketSystem({ navigation }) {
@@ -29,24 +31,28 @@ Messaging between clients and support staff is handled with live notifications a
 This project highlights backend design for service-oriented apps, secure authentication, and real-time communication systems tailored to IT support environments.
 `;
 
+  const [fontsLoaded] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
 
-        {/* Pressable image styled to match AIAlertSystem.tsx (100% width, 200 height, rounded) */}
         <Pressable
           onPress={() => setImageOpen(true)}
           style={styles.imagePressable}
         >
-          <Image
-            source={citsImage}
-            style={styles.image}
-            resizeMode="contain" // match the AIAlertSystem look; switch to "cover" if you prefer
-            onError={(error) => console.log("Image error:", error.nativeEvent)}
-            onLoad={() => console.log("Image loaded successfully")}
-          />
+          <Image source={citsImage} style={styles.image} resizeMode="contain" />
         </Pressable>
 
         <Pressable
@@ -63,7 +69,6 @@ This project highlights backend design for service-oriented apps, secure authent
         </Pressable>
       </ScrollView>
 
-      {/* Inline PaperModal for enlarged image */}
       <PaperModal
         visible={imageOpen}
         onDismiss={() => setImageOpen(false)}
@@ -79,7 +84,6 @@ This project highlights backend design for service-oriented apps, secure authent
   );
 }
 
-/** Inline PaperModal component (single-file usage) */
 function PaperModal({
   visible,
   onDismiss,
@@ -100,12 +104,7 @@ function PaperModal({
       >
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>{title}</Text>
-          <Pressable
-            onPress={onDismiss}
-            style={styles.closeButton}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
+          <Pressable onPress={onDismiss} style={styles.closeButton}>
             <MaterialCommunityIcons
               name="close"
               size={22}
@@ -129,39 +128,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heading: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 26,
     color: Colors.primary,
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade,
   },
   description: {
-    fontSize: 16,
-    color: Colors.black,
-    lineHeight: 24,
+    fontSize: 18,
+    color: Colors.black, // ✅ black text for readability
+    lineHeight: 28,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: "left",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
+    backgroundColor: "rgba(102, 97, 97, 0.3)",
+    padding: 12,
+    borderRadius: 8,
+    width: "100%",
   },
-
-  // Match AIAlertSystem image look, but make it pressable
   imagePressable: {
-    width: "50%",
+    width: "70%",
     height: 400,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 20,
-    backgroundColor: Colors.secondary,
-    //shadowColor: Colors.black,
-    //shadowOffset: { width: 0, height: 2 },
-    //   shadowOpacity: 0.15,
-    //   shadowRadius: 4,
-    //   elevation: 3,
+    backgroundColor: Colors.secondary, // ✅ back to secondary
   },
   image: {
     width: "100%",
     height: "100%",
   },
-
   backIconContainer: {
     position: "absolute",
     top: 20,
@@ -175,28 +171,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-
-  // Modal styles
   modalContainer: {
     width: Math.min(width - 24, 720),
     alignSelf: "center",
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.lightGray,
     borderRadius: 16,
-    padding: 12,
+    padding: 16,
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingTop: 4,
     paddingBottom: 8,
   },
   modalTitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.black,
+    fontSize: 20,
+    color: Colors.primary,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold,
   },
   closeButton: {
     position: "absolute",

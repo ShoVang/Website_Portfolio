@@ -1,12 +1,27 @@
+// screens/ProjectDetails/TradingBots/StockBotDetails.tsx
 import React from "react";
-import { View, StyleSheet, ScrollView, Image, Pressable } from "react-native";
+import { StyleSheet, ScrollView, Image, Pressable } from "react-native";
 import { Text } from "react-native-paper";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useFonts } from "expo-font";
+
 import { Colors } from "../../../styles/Colors";
+import { TYPOGRAPHY } from "../../../styles/TYPOGRAPHY";
 
 const stockBotImage = require("../../../../assets/UsedImages/StockBot.png");
 
 export default function StockBotDetails({ navigation }) {
+  const [fontsLoaded] = useFonts({
+    [TYPOGRAPHY.fontFamily
+      .arcade]: require("../../../../assets/Fonts/Press_Start_2P/PressStart2P-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modern]: require("../../../../assets/Fonts/Orbitron/static/Orbitron-Regular.ttf"),
+    [TYPOGRAPHY.fontFamily
+      .modernBold]: require("../../../../assets/Fonts/Orbitron/static/Orbitron-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>sBot (Penny Stock Trading Bot)</Text>
@@ -37,23 +52,28 @@ export default function StockBotDetails({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.secondary, // consistent background
     flexGrow: 1,
     alignItems: "center",
   },
   heading: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 26,
     color: Colors.primary,
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: TYPOGRAPHY.fontFamily.arcade, // ✅ PressStart2P
   },
   description: {
-    fontSize: 16,
-    color: Colors.black,
-    lineHeight: 24,
+    fontSize: 18,
+    color: Colors.black, // ✅ readable
+    lineHeight: 28,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: "left",
+    fontFamily: TYPOGRAPHY.fontFamily.modernBold, // ✅ Orbitron Bold
+    backgroundColor: "rgba(102, 97, 97, 0.3)", // ✅ overlay
+    padding: 12,
+    borderRadius: 8,
+    width: "100%",
   },
   image: {
     width: 200,

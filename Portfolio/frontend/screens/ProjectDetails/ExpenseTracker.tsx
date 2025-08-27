@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 20,
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.secondary,
   },
   image: {
     width: "100%",
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: Math.min(width - 24, 720),
     alignSelf: "center",
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.lightGray,
     borderRadius: 16,
     padding: 16,
   },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     flex: 1,
     fontSize: 20,
-    color: Colors.yellow,
+    color: Colors.primary,
     textAlign: "center",
     fontFamily: TYPOGRAPHY.fontFamily.modernBold,
   },
