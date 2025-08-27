@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AppTemplate",
-    "slug": "AppTemplate",
+    "name": "Portfolio Website",
+    "slug": "portfolio-website",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,8 +22,11 @@
       },
       "edgeToEdgeEnabled": true
     },
+    "assetBundlePatterns": ["**/*"],
     "web": {
-      "favicon": "./assets/UsedImages/favicon2.png"
+      "favicon": "./assets/UsedImages/favicon2.png",
+      "name": "Sho Vang | Portfolio Website",
+      "shortName": "Portfolio"
     }
   }
 }

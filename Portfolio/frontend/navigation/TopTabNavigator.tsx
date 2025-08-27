@@ -6,7 +6,8 @@ import {
   Provider as PaperProvider,
   MD3LightTheme,
 } from "react-native-paper";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+//import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { Colors } from "../styles/Colors";
 import HomeScreen from "../screens/HomeScreen";

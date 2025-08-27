@@ -58,6 +58,7 @@ Whenever you make code changes and want to update the site, run:
 
 bash
 Copy code
+rm -rf dist
 npx expo export
 This generates a production-ready web build inside the dist/ folder.
 

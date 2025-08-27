@@ -1,11 +1,4 @@
-
-Add slots machine to show skills if 3 match shows jackpot with animation ,
- show jack pot animation 
-
-
-Inside of portfiol website explaine the stuff i did to buidl this website 
-
-Insid the about me add all the skills and how I am a full stack dev but mainly focous on the front end. 
-
-make code look better and inside make people come see the actual code.
+Get icons to work in hosted version maybe have to switch what kind of shit i am geting the icons from
+Get favicon to work on hosted version 
+   work on vsersion control leave prod alone till ready to acually put it put there
 
