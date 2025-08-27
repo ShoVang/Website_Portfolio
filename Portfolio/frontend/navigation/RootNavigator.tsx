@@ -17,7 +17,7 @@ const Stack = createNativeStackNavigator();
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={TopTabNavigator} />
+      <Stack.Screen name="Portfolio Website" component={TopTabNavigator} />
       {/* Add more non-tab screens here */}
       <Stack.Screen
         name="ProjectDetail"
