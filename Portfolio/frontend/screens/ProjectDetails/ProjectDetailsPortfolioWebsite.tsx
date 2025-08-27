@@ -24,14 +24,15 @@ export default function ProjectDetailsPortfolioWebsite({ navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Portfolio Website</Text>
       <Text style={styles.description}>
-        This portfolio website was built to showcase projects I’ve completed in
-        school, personal projects, and professional work. It also highlights my
-        skills as a developer. The site was developed using React Native, the
-        framework I am most experienced with. It incorporates simple animations
-        and PaperModal for consistent UI design. The codebase is organized for
-        maintainability and scalability. All UI components are styled for a
-        cohesive, professional look, and the site is optimized for both desktop
-        and mobile viewing.
+        This portfolio website was built from an app template repo that I
+        created, the purpose of this website is to showcase projects I’ve
+        completed in school, personal projects, and professional work. It also
+        highlights my skills as a developer. The site was developed using React
+        Native, the framework I am most experienced with. It incorporates simple
+        animations and PaperModal for consistent UI design. The codebase is
+        organized for maintainability and scalability. All UI components are
+        styled for a cohesive, professional look, and the site is optimized for
+        both desktop and mobile viewing.
       </Text>
       <Pressable
         onPress={() => navigation.goBack()}
